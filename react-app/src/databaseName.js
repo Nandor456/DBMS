@@ -26,7 +26,7 @@ function DatabaseName() {
         const jsonData = { name: newDatabase };
 
         try {
-            const response = await fetch("http://localhost:5000/database", {
+            const response = await fetch("http://localhost:4000/database", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(jsonData),
@@ -62,7 +62,7 @@ function DatabaseName() {
         }
 
         try {
-            const response = await fetch("http://localhost:5000/database/delete", {
+            const response = await fetch("http://localhost:4000/database/delete", {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name: dbName }),

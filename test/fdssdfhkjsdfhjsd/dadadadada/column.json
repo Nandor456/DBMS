@@ -1,0 +1,32 @@
+[
+  {
+    "name": "dwda",
+    "type": "string"
+  },
+  {
+    "metadata": {
+      "PK": "",
+      "FK": ""
+    },
+    "constraints": {},
+    "column": {
+      "name": "",
+      "type": "string"
+    },
+    "inserted": {},
+    "name": "dasdadasda"
+  },
+  {
+    "metadata": {
+      "PK": "",
+      "FK": ""
+    },
+    "constraints": {},
+    "column": {
+      "name": "",
+      "type": "string"
+    },
+    "inserted": {},
+    "name": "dasdasda"
+  }
+]

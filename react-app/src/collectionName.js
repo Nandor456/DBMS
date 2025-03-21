@@ -3,7 +3,14 @@ import { useState, useEffect } from "react";
 function CollectionName() {
     const [tableName, setTableName] = useState("");
     const [activeDatabase, setActiveDatabase] = useState(null);
-    const [columns, setColumns] = useState([{ name: "", type: "string" }]); // List for columns
+    const [columns, setColumns] = useState([
+                                            { 
+                                                metadata: {PK: "", FK: ""},
+                                                constraints: {},
+                                                column: {name: "", type: "string" },
+                                                inserted: {}
+                                            }
+                                            ]); // List for columns
 
     useEffect(() => {
         const updateActiveDatabase = () => {
@@ -30,7 +37,13 @@ function CollectionName() {
     };
 
     const handleAddColumn = () => {
-        setColumns([...columns, { name: "", type: "string" }]);
+        setColumns([...columns, { 
+                                    metadata: {PK: "", FK: ""},
+                                    constraints: {},
+                                    column: {name: "", type: "string" },
+                                    inserted: {}
+                                }
+                    ]);
     };
 
     const handleRemoveColumn = (index) => {
@@ -56,7 +69,7 @@ function CollectionName() {
         };
 
         try {
-            await fetch("http://localhost:5000/database/table", {
+            await fetch("http://localhost:4000/database/table", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(jsonData),

@@ -99,6 +99,7 @@ app.post("/database", (req,res) =>{
 app.post("/database/table", (req,res) => {
     console.log("vettem table")
     const {database, table, column} = req.body
+    console.log(req.body)
     
     //nevek megvannak
     if (!database || !table || !column) return res.status(400).send("Hiba a tabla beszurassal");

@@ -1,32 +1,45 @@
 import { useState, useEffect } from "react";
 
 function CollectionName() {
-    const [inputValue, setInputValue] = useState("");
+    const [tableName, setTableName] = useState("");
     const [activeDatabase, setActiveDatabase] = useState(null);
-    
+    const [columns, setColumns] = useState([{ name: "", type: "string" }]); // List for columns
+
     useEffect(() => {
         const updateActiveDatabase = () => {
             const newDb = localStorage.getItem("activeDatabase");
             setActiveDatabase(newDb);
         };
-    
-        // Load on mount
+
         updateActiveDatabase();
-    
-        // Listen for localStorage changes
         window.addEventListener("storage", updateActiveDatabase);
-    
+
         return () => {
             window.removeEventListener("storage", updateActiveDatabase);
         };
     }, []);
 
-    const handleChange = (event) => {
-        setInputValue(event.target.value);
+    const handleTableNameChange = (event) => {
+        setTableName(event.target.value);
+    };
+
+    const handleColumnChange = (index, field, value) => {
+        const updatedColumns = [...columns];
+        updatedColumns[index][field] = value;
+        setColumns(updatedColumns);
+    };
+
+    const handleAddColumn = () => {
+        setColumns([...columns, { name: "", type: "string" }]);
+    };
+
+    const handleRemoveColumn = (index) => {
+        const updatedColumns = columns.filter((_, i) => i !== index);
+        setColumns(updatedColumns);
     };
 
     const handleSubmit = async () => {
-        if (!inputValue.trim()) {
+        if (!tableName.trim()) {
             alert("Please enter a table name.");
             return;
         }
@@ -36,20 +49,22 @@ function CollectionName() {
             return;
         }
 
-        // Create JSON object
-        const jsonData = { name: activeDatabase, table: inputValue };
+        const jsonData = { 
+            database: activeDatabase, 
+            table: tableName, 
+            columns: columns.filter(col => col.name.trim()) 
+        };
+
         try {
-            // Send JSON using fetch()
-            const response = await fetch("http://localhost:5000/database/table", {
+            await fetch("http://localhost:5000/database/table", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(jsonData),
             });
 
             alert("Table added successfully!");
-            setInputValue(""); // Clear input field
+            setTableName("");
+            setColumns([{ name: "", type: "string" }]); // Reset inputs
         } catch (error) {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");
@@ -58,19 +73,40 @@ function CollectionName() {
 
     return (
         <div className="database-div">
-            <label>Add a table:</label>
-            <br/>
+            <h3>Add a Table</h3>
+            <label>Table Name:</label>
             <input 
                 type="text" 
-                id="fname" 
-                name="fname" 
-                placeholder="Type here..." 
-                value={inputValue} 
-                onChange={handleChange} 
+                placeholder="Enter table name..." 
+                value={tableName} 
+                onChange={handleTableNameChange} 
             />
-            <br />
-            <button type="button" onClick={handleSubmit}>Submit</button>
-            <p>Current Active Database: <strong>{activeDatabase}</strong></p>
+            
+            <h4>Columns:</h4>
+            {columns.map((col, index) => (
+                <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "5px" }}>
+                    <input
+                        type="text"
+                        placeholder="Column name"
+                        value={col.name}
+                        onChange={(e) => handleColumnChange(index, "name", e.target.value)}
+                    />
+                    <select
+                        value={col.type}
+                        onChange={(e) => handleColumnChange(index, "type", e.target.value)}
+                    >
+                        <option value="string">String</option>
+                        <option value="number">Number</option>
+                        <option value="boolean">Boolean</option>
+                        <option value="date">Date</option>
+                    </select>
+                    <button onClick={() => handleRemoveColumn(index)}>-</button>
+                </div>
+            ))}
+            
+            <button onClick={handleAddColumn}>+ Add Column</button>
+            <br /><br />
+            <button onClick={handleSubmit}>Submit</button>
         </div>
     );
 }

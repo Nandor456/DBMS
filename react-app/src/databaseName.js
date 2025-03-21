@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function DatabaseName() {
     const [inputValue, setInputValue] = useState("");
@@ -8,6 +8,13 @@ function DatabaseName() {
     const handleChange = (event) => {
         setInputValue(event.target.value);
     };
+
+    useEffect(() => {
+        const storedDb = localStorage.getItem("activeDatabase");
+        if (storedDb) {
+            setActiveDatabase(storedDb);
+        }
+    }, []);
 
     const handleSubmit = async () => {
         if (!inputValue.trim()) {
@@ -40,6 +47,8 @@ function DatabaseName() {
     // Set the active database
     const handleSetActive = (dbName) => {
         setActiveDatabase(dbName);
+        localStorage.setItem("activeDatabase", dbName);
+        window.dispatchEvent(new Event("storage"));
     };
 
     // Delete a database from the list
@@ -49,6 +58,7 @@ function DatabaseName() {
 
         if (activeDatabase === dbName) {
             setActiveDatabase(null); // Remove active status if deleted
+            localStorage.removeItem("activeDatabase");
         }
 
         try {
@@ -100,8 +110,6 @@ function DatabaseName() {
                     ))}
                 </ul>
             </div>
-
-            {activeDatabase && <p>Current Active Database: <strong>{activeDatabase}</strong></p>}
         </div>
     );
 }

@@ -8,8 +8,8 @@ function CollectionName() {
                                                 metadata: {PK: "", FK: ""},
                                                 constraints: {},
                                                 column: [{name: "", type: "" }],
-                                                inserted: {}
                                             }
+                                                inserted: {}
                                             );
 
     useEffect(() => {
@@ -31,17 +31,10 @@ function CollectionName() {
     };
 
     const handleColumnChange = (index, field, value) => {
-        setColumns(prev => {
-            const updatedColumnArray = [...prev.column];
-            updatedColumnArray[index] = { ...updatedColumnArray[index], [field]: value };
-    
-            return {
-                ...prev,
-                column: updatedColumnArray
-            };
-        });
+        const updatedColumns = [...columns];
+        updatedColumns[index][field] = value;
+        setColumns(updatedColumns);
     };
-    
 
     const handleAddColumn = () => {
         setColumns(prev => {
@@ -71,7 +64,7 @@ function CollectionName() {
             alert("Please enter a table name.");
             return;
         }
-
+    
         if (!activeDatabase) {
             alert("No active database selected.");
             return;
@@ -80,13 +73,8 @@ function CollectionName() {
         const jsonData = { 
             database: activeDatabase, 
             table: tableName, 
-            columns: {
-                ...columns,
-                column: columns.column.filter(col => col.name.trim()) // csak érvényes oszlopokat küldünk
-            }
+            columns: columns.filter(col => col.name.trim()) 
         };
-        
-        
 
         try {
             await fetch("http://localhost:4000/database/table", {
@@ -94,22 +82,16 @@ function CollectionName() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(jsonData),
             });
-
+    
             alert("Table added successfully!");
             setTableName("");
-            setColumns(
-                            { 
-                                metadata: {PK: "", FK: ""},
-                                constraints: {},
-                                column: [{name: "", type: "" }],
-                                inserted: {}
-                            }
-                        ); // Reset inputs
+            setColumns([{ name: "", type: "string" }]); // Reset inputs
         } catch (error) {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");
         }
     };
+    
 
     return (
         <div className="database-div">
@@ -123,7 +105,7 @@ function CollectionName() {
             />
             
             <h4>Columns:</h4>
-            {columns.column.map((col, index) => (
+            {columns.map((col, index) => (
                 <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "5px" }}>
                     <input
                         type="text"

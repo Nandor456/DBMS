@@ -6,6 +6,7 @@
     "dada",
     "dadadadada"
   ],
+<<<<<<< HEAD
   "sqw": [
     "232323",
     "3",
@@ -19,5 +20,15 @@
   "asdaasdadadas": [
     "ddddddd",
     "33333"
+=======
+  "testdb": [
+    "testTable"
+  ],
+  "test2": [
+    "testTabla1",
+    "tablatesz3",
+    "tablateszt4",
+    "testeset5"
+>>>>>>> origin/DaniBranch
   ]
 }

@@ -210,4 +210,4 @@ app.get("/database/old", (_,res) =>{
 });
 
 
-app.listen(4000, () => console.log("Szerver fut a 5000-es porton!"));
+app.listen(4000, () => console.log("Szerver fut a 4000-es porton!"));

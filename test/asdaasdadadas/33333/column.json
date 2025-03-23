@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "PK": "",
+    "FK": ""
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "dada",
+      "type": "number"
+    },
+    {
+      "name": "aa",
+      "type": "date"
+    },
+    {
+      "name": "aaq2",
+      "type": "string"
+    }
+  ],
+  "inserted": {}
+}

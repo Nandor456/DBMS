@@ -1,0 +1,17 @@
+[
+  {
+    "metadata": {
+      "PK": "",
+      "FK": ""
+    },
+    "constraints": {},
+    "column": [
+      {
+        "name": "",
+        "type": ""
+      }
+    ],
+    "inserted": {},
+    "name": "dw"
+  }
+]

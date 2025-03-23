@@ -1,0 +1,19 @@
+[
+  {
+    "name": "ee",
+    "type": "string"
+  },
+  {
+    "metadata": {
+      "PK": "",
+      "FK": ""
+    },
+    "constraints": {},
+    "column": {
+      "name": "",
+      "type": "string"
+    },
+    "inserted": {},
+    "name": "23e"
+  }
+]

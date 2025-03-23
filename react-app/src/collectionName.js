@@ -3,14 +3,14 @@ import { useState, useEffect } from "react";
 function CollectionName() {
     const [tableName, setTableName] = useState("");
     const [activeDatabase, setActiveDatabase] = useState(null);
-    const [columns, setColumns] = useState([
+    const [columns, setColumns] = useState(
                                             { 
                                                 metadata: {PK: "", FK: ""},
                                                 constraints: {},
-                                                column: {name: "", type: "string" },
+                                                column: [{name: "", type: "" }],
                                                 inserted: {}
                                             }
-                                            ]); // List for columns
+                                            );
 
     useEffect(() => {
         const updateActiveDatabase = () => {
@@ -31,25 +31,40 @@ function CollectionName() {
     };
 
     const handleColumnChange = (index, field, value) => {
-        const updatedColumns = [...columns];
-        updatedColumns[index][field] = value;
-        setColumns(updatedColumns);
+        setColumns(prev => {
+            const updatedColumnArray = [...prev.column];
+            updatedColumnArray[index] = { ...updatedColumnArray[index], [field]: value };
+    
+            return {
+                ...prev,
+                column: updatedColumnArray
+            };
+        });
     };
+    
 
     const handleAddColumn = () => {
-        setColumns([...columns, { 
-                                    metadata: {PK: "", FK: ""},
-                                    constraints: {},
-                                    column: {name: "", type: "string" },
-                                    inserted: {}
-                                }
-                    ]);
-    };
+        setColumns(prev => {
+          return {
+            ...prev,
+            column: [
+              ...prev.column,
+              { name: "", type: "string" }
+            ]
+          };
+        });
+      };
 
     const handleRemoveColumn = (index) => {
-        const updatedColumns = columns.filter((_, i) => i !== index);
-        setColumns(updatedColumns);
+        setColumns(prev => {
+            const newColumnArray = prev.column.filter((_, i) => i !== index);
+            return {
+                ...prev,
+                column: newColumnArray
+            };
+        });
     };
+    
 
     const handleSubmit = async () => {
         if (!tableName.trim()) {
@@ -65,8 +80,13 @@ function CollectionName() {
         const jsonData = { 
             database: activeDatabase, 
             table: tableName, 
-            columns: columns.filter(col => col.name.trim()) 
+            columns: {
+                ...columns,
+                column: columns.column.filter(col => col.name.trim()) // csak érvényes oszlopokat küldünk
+            }
         };
+        
+        
 
         try {
             await fetch("http://localhost:4000/database/table", {
@@ -77,7 +97,14 @@ function CollectionName() {
 
             alert("Table added successfully!");
             setTableName("");
-            setColumns([{ name: "", type: "string" }]); // Reset inputs
+            setColumns(
+                            { 
+                                metadata: {PK: "", FK: ""},
+                                constraints: {},
+                                column: [{name: "", type: "" }],
+                                inserted: {}
+                            }
+                        ); // Reset inputs
         } catch (error) {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");
@@ -96,7 +123,7 @@ function CollectionName() {
             />
             
             <h4>Columns:</h4>
-            {columns.map((col, index) => (
+            {columns.column.map((col, index) => (
                 <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "5px" }}>
                     <input
                         type="text"

@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 
 function DatabaseName() {
     const [inputValue, setInputValue] = useState("");
-    const [items, setItems] = useState([]); // Stores the list of databases
-    const [activeDatabase, setActiveDatabase] = useState(null); // Tracks the active database
+    const [items, setItems] = useState([]);
+    const [activeDatabase, setActiveDatabase] = useState(null);
 
     const handleChange = (event) => {
         setInputValue(event.target.value);
@@ -14,6 +14,22 @@ function DatabaseName() {
         if (storedDb) {
             setActiveDatabase(storedDb);
         }
+
+        fetch("http://localhost:4000/database/old")
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("Hiba old_db");
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log("Sikeres old_db:", data);
+                setItems(data);
+            })
+            .catch(error => {
+                console.error("Hiba: ", error);
+        });
+
     }, []);
 
     const handleSubmit = async () => {

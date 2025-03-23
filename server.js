@@ -205,8 +205,10 @@ app.delete("/database/table/delete", (req,res) =>{
 
 app.get("/database/old", (_,res) =>{
     console.log("Old keres");
-    let jsonData = JSON.parse(fs.readFileSync(tableFile));
-    res.json(jsonData);
+    let jsonData = JSON.parse(fs.readFileSync(dbFile));
+    console.log(jsonData)
+    //console.log(json(jsonData.map(db => db.name)));
+    res.json(jsonData)
 });
 
 

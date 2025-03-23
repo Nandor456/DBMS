@@ -5,5 +5,14 @@
     "danidan",
     "dada",
     "dadadadada"
+  ],
+  "testdb": [
+    "testTable"
+  ],
+  "test2": [
+    "testTabla1",
+    "tablatesz3",
+    "tablateszt4",
+    "testeset5"
   ]
 }

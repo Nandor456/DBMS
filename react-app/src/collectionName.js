@@ -15,6 +15,22 @@ function CollectionName() {
     );
 
     useEffect(() => {
+
+        fetch("http://localhost:4000/database/old/table")
+        .then(res => {
+            if (!res.ok) {
+                throw new Error("Hiba oldtable_db");
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log("Sikeres oldtable_db:", data);
+            setAvailableTables(data);
+        })
+        .catch(error => {
+            console.error("Hiba old_db_table: ", error);
+        });
+
         const updateActiveDatabase = () => {
             const newDb = localStorage.getItem("activeDatabase");
             setActiveDatabase(newDb);

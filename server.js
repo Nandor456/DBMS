@@ -211,5 +211,13 @@ app.get("/database/old", (_,res) =>{
     res.json(jsonData)
 });
 
+app.get("/database/old/table", (_,res) =>{
+    console.log("Old tabla keres");
+    let jsonData = JSON.parse(fs.readFileSync(tableFile));
+    console.log( jsonData)
+    //console.log(json(jsonData.map(db => db.name)));
+    res.json(jsonData)
+});
+
 
 app.listen(4000, () => console.log("Szerver fut a 4000-es porton!"));

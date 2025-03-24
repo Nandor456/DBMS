@@ -75,6 +75,7 @@ app.post("/database", (req,res) =>{
         return res.status(404).send("Not Found");
 
     let data = JSON.parse(fs.readFileSync(dbFile));
+    console.log(data)
     let tableData = JSON.parse(fs.readFileSync(tableFile));
     // console.log(data);
     // console.log(name)
@@ -86,6 +87,7 @@ app.post("/database", (req,res) =>{
         return res.status(400).send("Az adatbazis mar letezik");
     }
     data.push(name);
+    console.log(data)
     tableData[name] = []
     fs.writeFileSync(tableFile, JSON.stringify(tableData, null, 2));
     fs.writeFileSync(dbFile, JSON.stringify(data, null, 2));
@@ -98,16 +100,24 @@ app.post("/database", (req,res) =>{
 //create table
 app.post("/database/table", (req,res) => {
     console.log("vettem table")
-    const {database, table, column} = req.body
-    
+    const {database, table, columns} = req.body
+    console.log(req.body)
+    console.log(database)
+    console.log(table)
+    console.log(columns)
     //nevek megvannak
-    if (!database || !table || !column) return res.status(400).send("Hiba a tabla beszurassal");
+    if (!database || !table || !columns){
+        console.log("Hiba a body-ban")
+        return res.status(400).send("Hiba a tabla beszurassal");
+    }
     console.log("elson tuljutott")
     
     //"databases.json" kiolvasas
     let data = JSON.parse(fs.readFileSync(dbFile));
+    console.log("dsa")
      //"table.json" kiolvasas
     let tableData = JSON.parse(fs.readFileSync(tableFile));
+    console.log("sas")
     if (!data.some(database2 => database2 === database)){              //database letezik
         console.log("Nem letezik ilyen adatbazis");
         return res.status(400).send("Nem letezik ilyen adatbazis");
@@ -122,6 +132,7 @@ app.post("/database/table", (req,res) => {
     //console.log("harmadikon tuljutott")
 
     tableData[database].push(table)
+    console.log(tableData)
     fs.writeFileSync(tableFile, JSON.stringify(tableData, null, 2));        //table berakva json-be
     const folderPath = path.join(__dirname, folder, database, table)
     fs.mkdirSync(folderPath, {recursive: true });                           //table folder letrejott
@@ -129,9 +140,9 @@ app.post("/database/table", (req,res) => {
     console.log(folderPath);
     
     filePath = path.join(folderPath, "column.json")
-    const jsonData = {column};
+    const jsonData = {columns};
 
-    fs.writeFileSync(filePath, JSON.stringify(column, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(columns, null, 2));
 
 });
 
@@ -192,11 +203,13 @@ app.delete("/database/table/delete", (req,res) =>{
 
 });
 
-app.post("/database/old", (_,res) =>{
+app.get("/database/old", (_,res) =>{
     console.log("Old keres");
-    let jsonData = JSON.parse(fs.readFileSync(tableFile));
-    res.json(jsonData);
+    let jsonData = JSON.parse(fs.readFileSync(dbFile));
+    console.log(jsonData)
+    //console.log(json(jsonData.map(db => db.name)));
+    res.json(jsonData)
 });
 
 
-app.listen(5000, () => console.log("Szerver fut a 5000-es porton!"));
+app.listen(4000, () => console.log("Szerver fut a 4000-es porton!"));

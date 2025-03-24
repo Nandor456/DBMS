@@ -6,13 +6,13 @@ function CollectionName() {
     const [referencedTables, setReferencedTables] = useState({});
     const [availableTables, setAvailableTables] = useState([]);
     const [columns, setColumns] = useState(
-                                            { 
-                                                metadata: {PK: [], FK: []},
-                                                constraints: {},
-                                                column: [{name: "", type: "" }],
-                                                inserted: {}
-                                            }
-                                            );
+        {
+            metadata: { PK: [], FK: [] },
+            constraints: {},
+            column: [{ name: "", type: "" }],
+            inserted: {}
+        }
+    );
 
     useEffect(() => {
         const updateActiveDatabase = () => {
@@ -36,7 +36,7 @@ function CollectionName() {
         setColumns(prev => {
             const updatedColumnArray = [...prev.column];
             updatedColumnArray[index] = { ...updatedColumnArray[index], [field]: value };
-    
+
             return {
                 ...prev,
                 column: updatedColumnArray
@@ -47,7 +47,7 @@ function CollectionName() {
     const handleColumnChangeMetadataPK = (columnName, value) => {
         setColumns(prev => {
             let updatedPKs = [...prev.metadata.PK];
-    
+
             if (value === "PK") {
                 if (!updatedPKs.includes(columnName)) {
                     updatedPKs.push(columnName);
@@ -55,7 +55,7 @@ function CollectionName() {
             } else {
                 updatedPKs = updatedPKs.filter(name => name !== columnName);
             }
-    
+
             return {
                 ...prev,
                 metadata: {
@@ -69,20 +69,29 @@ function CollectionName() {
     const handleColumnChangeMetadataFK = (columnName, tableName, value) => {
         setColumns(prev => {
             let updatedFKs = [...prev.metadata.FK];
-    
+
             if (value === "FK") {
                 const exists = updatedFKs.some(fk => fk.FKName === columnName);
-    
+
                 if (!exists) {
+                    // Hozzáadás, ha még nincs benne
                     updatedFKs.push({
                         FKName: columnName,
                         FKTableName: tableName
                     });
+                } else {
+                    // ✨ Frissítés, ha már van ilyen FKName
+                    updatedFKs = updatedFKs.map(fk =>
+                        fk.FKName === columnName
+                            ? { ...fk, FKTableName: tableName }
+                            : fk
+                    );
                 }
             } else {
+                // FK törlése
                 updatedFKs = updatedFKs.filter(fk => fk.FKName !== columnName);
             }
-    
+
             return {
                 ...prev,
                 metadata: {
@@ -92,20 +101,21 @@ function CollectionName() {
             };
         });
     };
-    
-    
+
+
+
 
     const handleAddColumn = () => {
         setColumns(prev => {
-          return {
-            ...prev,
-            column: [
-              ...prev.column,
-              { name: "", type: "string" }
-            ]
-          };
+            return {
+                ...prev,
+                column: [
+                    ...prev.column,
+                    { name: "", type: "string" }
+                ]
+            };
         });
-      };
+    };
 
     const handleRemoveColumn = (index) => {
         setColumns(prev => {
@@ -116,29 +126,29 @@ function CollectionName() {
             };
         });
     };
-    
+
 
     const handleSubmit = async () => {
         if (!tableName.trim()) {
             alert("Please enter a table name.");
             return;
         }
-        
+
         if (!activeDatabase) {
             alert("No active database selected.");
             return;
         }
 
-        const jsonData = { 
-            database: activeDatabase, 
-            table: tableName, 
+        const jsonData = {
+            database: activeDatabase,
+            table: tableName,
             columns: {
                 ...columns,
                 column: columns.column.filter(col => col.name.trim()) // csak érvényes oszlopokat küldünk
             }
         };
-        
-        
+
+
 
         try {
             await fetch("http://localhost:4000/database/table", {
@@ -150,13 +160,13 @@ function CollectionName() {
             alert("Table added successfully!");
             setTableName("");
             setColumns(
-                            { 
-                                metadata: {PK: [], FK: []},
-                                constraints: {},
-                                column: [{name: "", type: "" }],
-                                inserted: {}
-                            }
-                        ); // Reset inputs
+                {
+                    metadata: { PK: [], FK: [] },
+                    constraints: {},
+                    column: [{ name: "", type: "" }],
+                    inserted: {}
+                }
+            ); // Reset inputs
         } catch (error) {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");
@@ -167,13 +177,13 @@ function CollectionName() {
         <div className="database-div">
             <h3>Add a Table</h3>
             <label>Table Name:</label>
-            <input 
-                type="text" 
-                placeholder="Enter table name..." 
-                value={tableName} 
-                onChange={handleTableNameChange} 
+            <input
+                type="text"
+                placeholder="Enter table name..."
+                value={tableName}
+                onChange={handleTableNameChange}
             />
-            
+
             <h4>Columns:</h4>
             {columns.column.map((col, index) => (
                 <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "5px" }}>
@@ -187,7 +197,7 @@ function CollectionName() {
                         value={col.type}
                         onChange={(e) => handleColumnChange(index, "type", e.target.value)}
                     >
-                        <option value="blank"></option>
+                        <option value="choose">choose</option>
                         <option value="string">String</option>
                         <option value="number">Number</option>
                         <option value="boolean">Boolean</option>
@@ -196,70 +206,74 @@ function CollectionName() {
                     <select
                         value={columns.metadata.PK.includes(col.name) ? "PK" : "Not"}
                         onChange={(e) => handleColumnChangeMetadataPK(col.name, e.target.value)}
-                    >
+                    >   
                         <option value="Not">Not</option>
                         <option value="PK">PK</option>
                     </select>
                     <select
                         value={
                             columns.metadata.FK.some(fk => fk.FKName === col.name)
-                            ? "FK"
-                            : "Not"
+                                ? "FK"
+                                : "Not"
                         }
                         onChange={(e) => {
                             const newValue = e.target.value;
+
                             if (newValue === "Not") {
-                            // Töröljük az FK-t azonnal
-                            handleColumnChangeMetadataFK(col.name, "", "Not");
-                        
-                            // és töröljük a referencetable-t is (ha használod a külön state-et)
-                            setReferencedTables(prev => {
-                                const updated = { ...prev };
-                                delete updated[col.name];
-                                return updated;
-                            });
+                                handleColumnChangeMetadataFK(col.name, "", "Not");
+
+                                setReferencedTables(prev => {
+                                    const updated = { ...prev };
+                                    delete updated[col.name];
+                                    return updated;
+                                });
+                            } else if (newValue === "FK") {
+                                setReferencedTables(prev => ({
+                                    ...prev,
+                                    [col.name]: ""
+                                }));
+
+                                handleColumnChangeMetadataFK(col.name, "", "FK");
                             }
-                            // Ha "FK", akkor még nem csinálunk semmit — megvárjuk, míg beírja a tábla nevét
                         }}
-                        
                     >
                         <option value="Not">Not</option>
                         <option value="FK">FK</option>
                     </select>
 
-    {/* FK target table input – csak ha FK kiválasztva */}
-    {columns.metadata.FK.some(fk => fk.FKName === col.name) && (
-      <input
-      type="text"
-      placeholder="Referenced table name"
-      value={referencedTables[col.name] || ""}
-      onChange={(e) => {
-        const newTable = e.target.value;
-    
-        // Frissítjük az input állapotát
-        setReferencedTables(prev => ({
-          ...prev,
-          [col.name]: newTable
-        }));
-    
-        // Ellenőrizzük, hogy az adott oszlop valóban FK-ra van állítva
-        const isFK = columns.metadata.FK.some(fk => fk.FKName === col.name);
-    
-        // Ha még nincs bent az FK listában, hozzáadjuk
-        if (!isFK) {
-          handleColumnChangeMetadataFK(col.name, newTable, "FK");
-        } else {
-          // Ha már bent van, csak frissítjük a táblát
-          handleColumnChangeMetadataFK(col.name, newTable, "FK");
-        }
-      }}
-    />
-    
-    )}
+
+                    {columns.metadata.FK.some(fk => fk.FKName === col.name) && (
+                        <input
+                            type="text"
+                            placeholder="Referenced table name"
+                            value={referencedTables[col.name] || ""}
+                            onChange={(e) => {
+                                const newTable = e.target.value;
+
+                                // Frissítjük az input állapotát
+                                setReferencedTables(prev => ({
+                                    ...prev,
+                                    [col.name]: newTable
+                                }));
+
+                                // Ellenőrizzük, hogy az adott oszlop valóban FK-ra van állítva
+                                const isFK = columns.metadata.FK.some(fk => fk.FKName === col.name);
+
+                                // Ha még nincs bent az FK listában, hozzáadjuk
+                                if (!isFK) {
+                                    handleColumnChangeMetadataFK(col.name, newTable, "FK");
+                                } else {
+                                    // Ha már bent van, csak frissítjük a táblát
+                                    handleColumnChangeMetadataFK(col.name, newTable, "FK");
+                                }
+                            }}
+                        />
+
+                    )}
                     <button onClick={() => handleRemoveColumn(index)}>-</button>
                 </div>
             ))}
-            
+
             <button onClick={handleAddColumn}>+ Add Column</button>
             <br /><br />
             <button onClick={handleSubmit}>Submit</button>

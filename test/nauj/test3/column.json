@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "PK": [
+      "fds"
+    ],
+    "FK": []
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "sa",
+      "type": "number"
+    },
+    {
+      "name": "fds",
+      "type": "string"
+    },
+    {
+      "name": "ffc",
+      "type": "string"
+    }
+  ],
+  "inserted": {}
+}

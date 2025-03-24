@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "PK": [
+      "1"
+    ],
+    "FK": [
+      {
+        "FKName": "1",
+        "FKTableName": "tabla2"
+      }
+    ]
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "1",
+      "type": "number"
+    },
+    {
+      "name": "2",
+      "type": "string"
+    }
+  ],
+  "inserted": {}
+}

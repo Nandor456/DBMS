@@ -100,8 +100,6 @@ function DatabaseName() {
                 <br />
                 <input 
                     type="text" 
-                    id="fname" 
-                    name="fname" 
                     placeholder="Type here..." 
                     value={inputValue} 
                     onChange={handleChange} 
@@ -114,7 +112,7 @@ function DatabaseName() {
                 <h3>Databases:</h3>
                 <ul>
                     {items.map((db) => (
-                        <li key={db} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <li key={db}>
                             <label>{db}</label>
                             <button onClick={() => handleSetActive(db)} style={{ backgroundColor: activeDatabase === db ? "green" : "lightgray" }}>
                                 {activeDatabase === db ? "Active" : "Set Active"}

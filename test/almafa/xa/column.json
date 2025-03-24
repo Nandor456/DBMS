@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "PK": "sa",
+    "FK": ""
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "aa",
+      "type": "boolean"
+    },
+    {
+      "name": "sa",
+      "type": "date"
+    },
+    {
+      "name": "saaa",
+      "type": "number"
+    }
+  ],
+  "inserted": {}
+}

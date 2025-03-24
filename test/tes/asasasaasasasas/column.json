@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "PK": [
+      "te1"
+    ],
+    "FK": [
+      {
+        "FKName": "",
+        "FKTableName": ""
+      },
+      {
+        "FKName": "te1",
+        "FKTableName": ""
+      },
+      {
+        "FKName": "te3",
+        "FKTableName": ""
+      }
+    ]
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "te1",
+      "type": "string"
+    },
+    {
+      "name": "te2",
+      "type": "boolean"
+    },
+    {
+      "name": "te3",
+      "type": "date"
+    }
+  ],
+  "inserted": {}
+}

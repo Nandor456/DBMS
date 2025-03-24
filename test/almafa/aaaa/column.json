@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "PK": "",
+    "FK": ""
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "dsada",
+      "type": ""
+    },
+    {
+      "name": "dasda",
+      "type": "string"
+    }
+  ],
+  "inserted": {}
+}

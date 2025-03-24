@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "PK": [
+      ""
+    ],
+    "FK": [
+      ""
+    ]
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "wde",
+      "type": "boolean"
+    },
+    {
+      "name": "dw",
+      "type": "number"
+    }
+  ],
+  "inserted": {}
+}

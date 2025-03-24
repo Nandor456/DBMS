@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "PK": [
+      "da"
+    ],
+    "FK": [
+      {
+        "FKName": "",
+        "FKTableName": ""
+      },
+      {
+        "FKName": "aa",
+        "FKTableName": ""
+      }
+    ]
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "da",
+      "type": "boolean"
+    },
+    {
+      "name": "da",
+      "type": "boolean"
+    },
+    {
+      "name": "aa",
+      "type": "string"
+    },
+    {
+      "name": "dad",
+      "type": "string"
+    }
+  ],
+  "inserted": {}
+}

@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "PK": [],
+    "FK": [
+      {
+        "FKName": "",
+        "FKTableName": ""
+      }
+    ]
+  },
+  "constraints": {},
+  "column": [],
+  "inserted": {}
+}

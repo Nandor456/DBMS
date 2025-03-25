@@ -8,7 +8,7 @@ function DatabaseName() {
     const handleChange = (event) => {
         setInputValue(event.target.value);
     };
-
+    
     useEffect(() => {
         const storedDb = localStorage.getItem("activeDatabase");
         if (storedDb) {

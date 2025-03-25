@@ -185,7 +185,7 @@ function CollectionName() {
                     column: [{ name: "", type: "" }],
                     inserted: {}
                 }
-            ); // Reset inputs
+            );
         } catch (error) {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");

@@ -8,49 +8,6 @@ const path = require("path");
 const app = express();
 app.use(express.json());
 app.use(cors());
-//{ "name": "arka2" }
-
-// {   
-//     "database": "adasd2", 
-//     "table": "ezaz0",
-//     "column": {
-//         "constraints":
-//         {
-//             "PK": [
-//                 "Person", "Phone number"
-//             ],
-//             "FK": [
-//                     {
-//                     "FK_tablename": "Test2",
-//                     "FK_column": "id",
-//                     "local_FK_column": "FK_id_Test2"
-//                     },
-//                     {
-//                     "FK_tablename": "Test2",
-//                     "FK_column": "id",
-//                     "local_FK_column": "FK_id_Test2"
-//                     }
-//                 ]
-//         },
-//         "column":
-//         [
-//             {
-//                 "name": "asd",
-//                 "type": "int"
-//             },
-//             {
-//                 "name": "masd",
-//                 "type": "VARCHAR"
-//             }
-//         ]
-//     }
-// }
-
-// mongoose.connect("mongodb://localhost:27017/admin", {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// }).then(() => console.log("✅ MongoDB csatlakozva!"))
-//   .catch(err => console.error("MongoDB hiba:", err));
 
 const dbFile = "databases.json"
 const folder = "test";

@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "PK": [],
+    "FK": []
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "asdas",
+      "type": ""
+    }
+  ],
+  "inserted": {}
+}

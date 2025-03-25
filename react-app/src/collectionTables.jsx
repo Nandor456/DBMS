@@ -1,18 +1,17 @@
 import { useEffect, useState } from "react";
+import { fetchTables } from "./utils/oldTableFunction";
 
-function TableList() {
-  const [tablesByDb, setTablesByDb] = useState({});
+function TableList({updateTrigger}) {
+  const [tablesByDb, setTablesByDb] = useState([]);
   const [activeDatabase, setActiveDatabase] = useState(null);
 
   useEffect(() => {
-    fetch("http://localhost:4000/database/old/table")
-      .then((res) => res.json())
-      .then((data) => {
-        setTablesByDb(data);
-      })
-      .catch((err) => {
-        console.error("Failed to load tables:", err);
-      });
+    fetchTables()
+    .then(data => setTablesByDb(data))
+    .catch(err => {
+      // Itt opcionálisan hibát jelezhetsz
+      console.error("Nem sikerült betölteni a táblákat:", err);
+    });
 
     const updateActiveDatabase = () => {
       const newDb = localStorage.getItem("activeDatabase");
@@ -22,10 +21,20 @@ function TableList() {
     updateActiveDatabase();
     window.addEventListener("storage", updateActiveDatabase);
 
-    return () => {
+    return () => {      
       window.removeEventListener("storage", updateActiveDatabase);
     };
   }, []);
+
+  useEffect(() => {
+    console.log("jelzett")
+    fetchTables()
+    .then(data => setTablesByDb(data))
+    .catch(err => {
+      // Itt opcionálisan hibát jelezhetsz
+      console.error("Nem sikerült betölteni a táblákat:", err);
+    }); // újratöltés, ha frissült a trigger
+  }, [updateTrigger]);
 
   const handleDelete = async (tableName) => {
     try {
@@ -49,6 +58,7 @@ function TableList() {
   }
 
   // Get the tables for the active database
+  
   const tables = activeDatabase ? tablesByDb[activeDatabase] || [] : [];
 
   return (

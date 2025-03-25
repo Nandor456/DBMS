@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { fetchTables } from "./utils/oldTableFunction";
 
-function CollectionName() {
+function CollectionName({onTableCreated}) {
     const [tableName, setTableName] = useState("");
     const [activeDatabase, setActiveDatabase] = useState(null);
     const [referencedTables, setReferencedTables] = useState({});
     const [availableTables, setAvailableTables] = useState([]);
+    const [tablesByDb, setTablesByDb] = useState([]);
     const [columns, setColumns] = useState(
         {
             metadata: { PK: [], FK: [] },
@@ -44,11 +46,23 @@ function CollectionName() {
         };
     }, []);
 
+    useEffect(() => {
+        console.log("Frissült availableTables:", availableTables);
+      
+        Object.entries(availableTables).forEach(([db, tables]) => {
+          console.log(`DB: ${db}`);
+          tables.forEach((table) => {
+            console.log(" - Table:", table);
+          });
+        });
+      }, [availableTables]);
+
     const handleTableNameChange = (event) => {
         setTableName(event.target.value);
     };
 
     const handleColumnChange = (index, field, value) => {
+
         setColumns(prev => {
             const updatedColumnArray = [...prev.column];
             updatedColumnArray[index] = { ...updatedColumnArray[index], [field]: value };
@@ -174,10 +188,31 @@ function CollectionName() {
             });
 
             alert("Table added successfully!");
-            //---------------------------------
-            //BUG: The page doesnt refresh after adding column
-            //---------------------------------
+            console.log(tableName)
+
+            if (typeof onTableCreated === "function") {
+                console.log("jelez");
+                onTableCreated(); // ← jelezzük, hogy új tábla lett
+              }
+        
+            //setAvailableTables(tableName);
+            setAvailableTables(prev => {
+                const updated = { ...prev };
+            
+                if (!updated[activeDatabase]) {
+                    updated[activeDatabase] = []; // ha még nincs, létrehozzuk
+                }
+            
+                if (!updated[activeDatabase].includes(tableName)) {
+                    updated[activeDatabase].push(tableName); // csak akkor toljuk be, ha nincs benne
+                }
+            
+                return updated;
+            });
+            
+                //localStorage.setItem("newTable", tableName);
             setTableName("");
+            window.dispatchEvent(new Event("newTable"));
             setColumns(
                 {
                     metadata: { PK: [], FK: [] },

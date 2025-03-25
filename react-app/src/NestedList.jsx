@@ -37,7 +37,7 @@ function NestedList() {
     return (
         <List
             subheader={
-                <ListSubheader sx={{ color: "aqua", backgroundColor: "black", fontSize: 40, borderRadius: 10 }}>
+                <ListSubheader sx={{ color: "white", backgroundColor: "black", fontSize: 40, borderRadius: 10 }}>
                     Databases:
                 </ListSubheader>
             }
@@ -49,8 +49,8 @@ function NestedList() {
                         {openStates[dbName] ? <ExpandLess /> : <ExpandMore />}
                     </ListItemButton>
                     <Collapse in={openStates[dbName]} timeout="auto" unmountOnExit>
-                        <List component="div" disablePadding sx={{ pl: 4 }}>
-                            {/* Ensure tables[dbName] exists before mapping */}
+                    
+                        <List component="div" disablePadding sx={{ pl: 4}}>
                             {tables[dbName]?.length > 0 ? (
                                 tables[dbName].map((table, tIndex) => (
                                     <ListItem key={tIndex} disablePadding>
@@ -62,7 +62,7 @@ function NestedList() {
                             ) : (
                                 <ListItem disablePadding>
                                     <ListItemButton>
-                                        <ListItemText primary="No tables found" sx={{ color: "gray" }} />
+                                        <ListItemText primary="-" sx={{ color: "black" }} />
                                     </ListItemButton>
                                 </ListItem>
                             )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import { fetchDatabases } from "./utils/oldDatabaseFunction";
 
-function DatabaseName() {
+function DatabaseName({onDBCreated}) {
     const [inputValue, setInputValue] = useState("");
     const [items, setItems] = useState([]);
     const [activeDatabase, setActiveDatabase] = useState(null);
@@ -15,20 +16,29 @@ function DatabaseName() {
             setActiveDatabase(storedDb);
         }
 
-        fetch("http://localhost:4000/database/old")
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error("Hiba old_db");
-                }
-                return res.json();
-            })
-            .then(data => {
-                console.log("Sikeres old_db:", data);
-                setItems(data);
-            })
-            .catch(error => {
-                console.error("Hiba: ", error);
-        });
+        // fetch("http://localhost:4000/database/old")
+        //     .then(res => {
+        //         if (!res.ok) {
+        //             throw new Error("Hiba old_db");
+        //         }
+        //         return res.json();
+        //     })
+        //     .then(data => {
+        //         console.log("Sikeres old_db:", data);
+        //         setItems(data);
+        //     })
+        //     .catch(error => {
+        //         console.error("Hiba: ", error);
+        // });
+        fetchDatabases()
+        .then(data => { 
+            console.log("Sikeres old_db:", data);
+            setItems(data);
+        })
+        .catch(error => {
+            console("fetchDB hiba: ", error);
+        })
+        
 
     }, []);
 
@@ -81,6 +91,15 @@ function DatabaseName() {
             console.error("Error sending data:", error);
             alert("Failed to send JSON data.");
         }
+
+
+        if (typeof onDBCreated === "function") {
+            console.log("jelez DB");
+            onDBCreated();
+        }else{
+            console.log("typeof hiba onDBCreate")
+        }
+
     };
 
     // Set the active database

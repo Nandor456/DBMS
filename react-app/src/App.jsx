@@ -9,6 +9,7 @@ const drawerWidth = 250;
 
 function App() {
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [updateTriggerDB, setUpdateTriggerDB] = useState(0);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -21,17 +22,23 @@ function App() {
         }}
       >
         <Toolbar />
-        <NestedList />
+        <NestedList 
+          updateTrigger={updateTrigger} 
+          updateTriggerDB={updateTriggerDB}
+        /> 
       </Drawer>
 
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
-        <h1><DatabaseName></DatabaseName></h1>
+        <h1><DatabaseName 
+          onDBCreated={() => setUpdateTriggerDB(prev => prev + 1)}
+          />
+        </h1>
         <h1>
           <CollectionName  
             onTableCreated={() => setUpdateTrigger(prev => prev + 1)} 
           />
-        </h1>
+        </h1> 
         <h1>
           <TableList 
             updateTrigger={updateTrigger} 

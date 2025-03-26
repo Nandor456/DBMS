@@ -62,7 +62,6 @@ function CollectionName({onTableCreated}) {
     };
 
     const handleColumnChange = (index, field, value) => {
-
         setColumns(prev => {
             const updatedColumnArray = [...prev.column];
             updatedColumnArray[index] = { ...updatedColumnArray[index], [field]: value };

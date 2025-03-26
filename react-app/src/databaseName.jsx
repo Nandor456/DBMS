@@ -32,6 +32,29 @@ function DatabaseName() {
 
     }, []);
 
+    useEffect(() => {
+        const storedDb = localStorage.getItem("activeDatabase");
+        if (storedDb) {
+            setActiveDatabase(storedDb);
+        }
+
+        fetch("http://localhost:4000/database/old")
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("Hiba old_db");
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log("Sikeres old_db:", data);
+                setItems(data);
+            })
+            .catch(error => {
+                console.error("Hiba: ", error);
+        });
+
+    }, []);
+
     const handleSubmit = async () => {
         if (!inputValue.trim()) {
             alert("Please enter a database name.");

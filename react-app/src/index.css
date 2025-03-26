@@ -85,3 +85,14 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.MuiListItemText-primary {
+  color: white !important; 
+  font-size: 18px !important; 
+  font-weight: bold !important; 
+  font-family: "Arial", sans-serif !important;
+}
+
+.MuiListItemButton-root:hover .MuiListItemText-primary {
+  color: black !important;
+}

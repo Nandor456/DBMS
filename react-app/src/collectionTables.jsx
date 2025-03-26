@@ -21,7 +21,7 @@ function TableList({updateTrigger}) {
     updateActiveDatabase();
     window.addEventListener("storage", updateActiveDatabase);
 
-    return () => {      
+    return () => {
       window.removeEventListener("storage", updateActiveDatabase);
     };
   }, []);
@@ -58,7 +58,6 @@ function TableList({updateTrigger}) {
   }
 
   // Get the tables for the active database
-  
   const tables = activeDatabase ? tablesByDb[activeDatabase] || [] : [];
 
   return (

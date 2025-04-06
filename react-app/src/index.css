@@ -87,9 +87,9 @@ button:focus-visible {
 }
 
 .MuiListItemText-primary {
-  color: white !important; 
-  font-size: 18px !important; 
-  font-weight: bold !important; 
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
   font-family: "Arial", sans-serif !important;
 }
 

@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
-import { fetchTables } from "./utils/oldTableFunction";
-import { fetchDatabases } from "./utils/oldDatabaseFunction";
+import { fetchTables } from "./utils/OldTableFunction";
+import { fetchDatabases } from "./utils/OldDatabaseFunction";
 
 function NestedList({ updateTrigger, updateTriggerDB }) {
   const [dbNames, setDbNames] = useState([]);

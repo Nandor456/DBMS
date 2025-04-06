@@ -326,16 +326,13 @@ function typeTest(dbName, tableName, partNames, parts) {
 // {
 //   "query": "\n\nUSE Test;\n\nINSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
 // }
-app.post("/database/insert", async (req, res) => {
+app.post("/database/row/insert", async (req, res) => {
   const { query } = req.body;
   let data = JSON.parse(fs.readFileSync(dbFile));
   let tableData = JSON.parse(fs.readFileSync(tableFile));
-
   if (!query) return res.status(404).send("Not Found");
-  //console.log(query);
   const lines = query.split("\n");
   let elements = [];
-  //console.log(lines);
   for (const line of lines) {
     if (line.trim() !== "") {
       elements.push(line);
@@ -354,15 +351,14 @@ app.post("/database/insert", async (req, res) => {
   //console.log("tableName: ", tableName);
   const columns = inserts.split("(")[1].split(")")[0];
   //console.log(columns);
-  const value = inserts.split(")")[1].split("(")[0];
+  let value = inserts.split(")")[1].split("(")[0];
   const values = inserts.split("(")[2].split(")")[0];
-  //console.log("Value:  ", value);
   //console.log("Values: ", values);
   //console.log("Csak columns-ek: ", columns);
   //console.log(insert);
   insert = insert.toUpperCase();
   use = use.toUpperCase();
-  value = value.toUpperCase();
+  value = value.toUpperCase().trim();
 
   const partNames = columns
     .split(",")
@@ -378,11 +374,12 @@ app.post("/database/insert", async (req, res) => {
   if (
     insert !== "INSERT INTO" ||
     use !== "USE" ||
-    value !== "VALUE" ||
+    value !== "VALUES" ||
     !tableName ||
     !dbName
   ) {
     res.status(400).send("Hibas INSERT hivas");
+    console.log("Hibas INSERT hivas");
     return;
   }
   if (!data.some((database) => database === dbName)) {
@@ -424,10 +421,12 @@ app.post("/database/insert", async (req, res) => {
     // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
     const existing = await collection.findOne({ _id: key });
     if (existing) {
+      console.log("Ez a kulcs már létezik!");
       return res.status(400).send("Ez a kulcs már létezik!");
     }
     //Ha nem létezik, beszúrjuk
     await collection.insertOne({ _id: key, value: finalValues });
+    console.log("beszurodott");
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -466,14 +465,11 @@ const whichID = (condition, dbName, tableName) => {
 
   return keyParts.join("#");
 };
-
-console.log(whichID(" id = 'adada' AND id = 1"));
-
-app.post("/database/insert/delete", async (req, res) => {
+app.delete("/database/row/delete", async (req, res) => {
   const { query } = req.body;
   let data = JSON.parse(fs.readFileSync(dbFile));
   let tableData = JSON.parse(fs.readFileSync(tableFile));
-
+  console.log(query);
   if (!query) {
     return res.status(400).send("Ures query");
   }
@@ -498,7 +494,7 @@ app.post("/database/insert/delete", async (req, res) => {
   }
   const condition = inserts.slice(whereIndex + "WHERE".length).trim();
 
-  console.log(condition);
+  console.log("condition:" + condition);
   delet = delet.toUpperCase();
   use = use.toUpperCase();
 
@@ -515,7 +511,7 @@ app.post("/database/insert/delete", async (req, res) => {
     //console.log("Meg nem letezik a tabla");
     return res.status(400).send("Meg nem letezik a tabla");
   }
-  const value = whichID(condition);
+  const value = whichID(condition, dbName, tableName);
   if (!value || value === -1) {
     return res.status(400).send("Nem jol adta meg az id-t");
   }

@@ -1,8 +1,8 @@
 import { Drawer, CssBaseline, Toolbar, Box } from "@mui/material";
 import { useState } from "react";
 import DatabaseName from "./databaseName";
-import CollectionName from "./CollectionName";
-import TableList from "./CollectionTable";
+import CollectionName from "./collectionName";
+import TableList from "./collectionTables";
 import NestedList from "./NestedList";
 
 const drawerWidth = 250;

@@ -4,59 +4,31 @@ import {
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
-import { fetchTables } from "./utils/oldTableFunction";
-import { fetchDatabases } from "./utils/oldDatabaseFunction";
 
-function NestedList({updateTrigger, updateTriggerDB}) {
+function NestedList() {
     const [dbNames, setDbNames] = useState([]);
     const [openStates, setOpenStates] = useState({});
     const [tables, setTables] = useState({}); // Store tables as an object
 
     useEffect(() => {
-        // fetch("http://localhost:4000/database/old")
-        //     .then(res => res.ok ? res.json() : Promise.reject("Hiba old_db"))
-        //     .then(data => {
-        //         setDbNames(data);
-        //         setOpenStates(data.reduce((acc, dbName) => ({ ...acc, [dbName]: false }), {}));
-        //     })
-        //     .catch(error => console.error("Hiba: ", error));
-            
-        fetchDatabases()
-        .then(data => { setDbNames(data);
-                        setOpenStates(data.reduce((acc, dbName) => ({ ...acc, [dbName]: false }), {}));
-        })
-        .catch(err => {
-            console.error("Nem sikerült betölteni a DB-ket:", err);
-        });
-
-        fetchTables()
-            .then(data => setTables(data))
-            .catch(err => {
-            console.error("Nem sikerült betölteni a táblákat:", err);
-        });
+        fetch("http://localhost:4000/database/old")
+            .then(res => res.ok ? res.json() : Promise.reject("Hiba old_db"))
+            .then(data => {
+                setDbNames(data);
+                setOpenStates(data.reduce((acc, dbName) => ({ ...acc, [dbName]: false }), {}));
+            })
+            .catch(error => console.error("Hiba: ", error));
     }, []);
 
     useEffect(() => {
-        console.log("bejott tabla")
-        fetchTables()
-        .then(data => setTables(data))
-        .catch(err => {
-            console.error("Nem sikerült betölteni a táblákat:", err);
-        });
-    }, [updateTrigger]);
-
-    useEffect(() => {
-        console.log("bejott DB")
-        fetchDatabases()
-        .then(data => { 
-            console.log("Sikeres old_db:", data);
-            setDbNames(data)
-            setOpenStates(data.reduce((acc, dbName) => ({ ...acc, [dbName]: false }), {})); // ha új db jött, ehhez is jó frissítés
-        })
-        .catch(error => {
-            console.log("fetchDB hiba: ", error);
-        })
-    }, [updateTriggerDB]);
+        fetch("http://localhost:4000/database/old/table")
+            .then(res => res.ok ? res.json() : Promise.reject("Hiba old_table"))
+            .then(data => {
+                console.log("Sikeres old_table:", data);
+                setTables(data); // Data is already an object { "123": [], "234": [] }
+            })
+            .catch(error => console.error("Hiba: ", error));
+    }, []);
 
     const handleClick = (dbName) => {
         setOpenStates(prev => ({ ...prev, [dbName]: !prev[dbName] }));

@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
-import { fetchTables } from "./utils/OldTableFunction";
-import { fetchDatabases } from "./utils/OldDatabaseFunction";
+import { fetchTables } from "./utils/oldTableFunction";
+import { fetchDatabases } from "./utils/oldDatabaseFunction";
 
 function NestedList({ updateTrigger, updateTriggerDB }) {
   const [dbNames, setDbNames] = useState([]);
@@ -17,6 +17,14 @@ function NestedList({ updateTrigger, updateTriggerDB }) {
   const [tables, setTables] = useState({}); // Store tables as an object
 
   useEffect(() => {
+    // fetch("http://localhost:4000/database/old")
+    //     .then(res => res.ok ? res.json() : Promise.reject("Hiba old_db"))
+    //     .then(data => {
+    //         setDbNames(data);
+    //         setOpenStates(data.reduce((acc, dbName) => ({ ...acc, [dbName]: false }), {}));
+    //     })
+    //     .catch(error => console.error("Hiba: ", error));
+
     fetchDatabases()
       .then((data) => {
         setDbNames(data);
@@ -79,7 +87,11 @@ function NestedList({ updateTrigger, updateTriggerDB }) {
       }
     >
       {dbNames.map((dbName, index) => (
-        <ListItem key={index} disablePadding>
+        <ListItem
+          key={index}
+          disablePadding
+          sx={{ flexDirection: "column", alignItems: "stretch" }}
+        >
           <ListItemButton onClick={() => handleClick(dbName)}>
             <ListItemText primary={dbName} />
             {openStates[dbName] ? <ExpandLess /> : <ExpandMore />}

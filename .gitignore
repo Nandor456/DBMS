@@ -2,3 +2,4 @@ node_modules
 table.json
 database.json
 test
+**/.DS_Store

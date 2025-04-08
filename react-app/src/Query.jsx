@@ -40,7 +40,6 @@ function Query() {
       alert(error.message);
       return;
     }
-
     try {
       const response = await fetch(
         `http://localhost:4000/database/row/${method.toLowerCase()}`,
@@ -50,17 +49,14 @@ function Query() {
           body: JSON.stringify(jsonData),
         }
       );
-
+      const responseData = await response.text();
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText);
+        throw new Error(responseData || "Unknown error occurred");
       }
-
-      const data = await response.json();
-      alert(`Success: ${JSON.stringify(data)}`);
+      alert(`Success: ${responseData}`);
     } catch (error) {
       console.error("Error:", error);
-      alert(error.message);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -120,7 +116,6 @@ function Query() {
             ))}
           </div>
 
-          {/* Textarea */}
           <textarea
             ref={textareaRef}
             value={code}

@@ -355,7 +355,8 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
 
 
 //UJ Lab3-hoz Insert esetben indexek updateje
-async function handleindexes(pk, partNames, parts, dbName, tableName) {
+async function handleindexes(pk, parts, dbName, tableName) {
+  console.log("baj: ", parts)
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
   const filteredCollections = collections.filter(collection =>
@@ -388,9 +389,9 @@ async function handleindexes(pk, partNames, parts, dbName, tableName) {
       let final = "";
       for (const ind of indexes) {
         if (final === "") {
-          final = final + parts[ind];
+          final = final + parts.split("#")[ind];
         } else {
-          final = final + "#" + parts[ind];
+          final = final + "#" + parts.split("#")[ind];
         }
       }
       const collection = db.collection(filter.name);
@@ -407,7 +408,7 @@ async function handleindexes(pk, partNames, parts, dbName, tableName) {
         // Ha nem létezik, létrehozunk egy új dokumentumot
         await collection.insertOne({
           _id: final,
-          value: [pk]
+          value: pk
         });
       }
       console.log(final, filter.name)
@@ -429,12 +430,14 @@ async function handleindexes(pk, partNames, parts, dbName, tableName) {
 }
 
 
-handleindexes('ssssss22', 'd', ['elem2er', 'alma'], 'aaa', 'hes')
+//handleindexes('ssssss22', 'd', ['elem2er', 'alma'], 'aaa', 'hes')
 //typeTest("Test", "Tester", [2]);
 
 // {
 //   "query": "\n\nUSE Test;\n\nINSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
 // }
+//USE Test;
+//INSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
 app.post("/database/row/insert", async (req, res) => {
   const { query } = req.body;
   let data = JSON.parse(fs.readFileSync(dbFile));
@@ -513,6 +516,7 @@ app.post("/database/row/insert", async (req, res) => {
 
   //console.log("dsadasdasdsadadasd:     ", tableName, dbName);
   const { key, indexes } = keyF(partNames, parts, tableName, dbName);
+  console.log("itt a pk: ", key)
   //console.log(indexes);
   //console.log("Kulcsok: ", key);
   const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
@@ -540,7 +544,7 @@ app.post("/database/row/insert", async (req, res) => {
       return res.status(400).send("Az egyik ertek unique, es mar letezik");
     }
     //Ha nem létezik, beszúrjuk
-    handleindexes(partNames, finalValues, db);
+    handleindexes(key, finalValues, dbName, tableName);
     await collection.insertOne({ _id: key, value: finalValues });
     console.log("beszurodott");
     res.json({ success: true });

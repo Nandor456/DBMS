@@ -61,6 +61,15 @@ app.post("/database", (req, res) => {
   res.json({ message: `Adatbazis '${name}' letrehozva` });
 });
 
+app.post("/database/isvalid", (req, res) => {
+  const dbName = req.body.name;
+  console.log(dbName);
+  let data = JSON.parse(fs.readFileSync(dbFile));
+  if (!data.some((database) => database === dbName)) {
+    return res.status(400).send("The database doesnt exist");
+  }
+  res.json({ message: "sikeres kereses" });
+});
 //create table
 app.post("/database/table", (req, res) => {
   console.log("vettem table");

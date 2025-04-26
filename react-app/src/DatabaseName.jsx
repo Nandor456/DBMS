@@ -1,65 +1,22 @@
 import { useState, useEffect } from "react";
-import { fetchDatabases } from "./utils/OldDatabaseFunction";
+//import { fetchDatabases } from "./utils/OldDatabaseFunction";
 
 function DatabaseName({ onDBCreated }) {
   const [inputValue, setInputValue] = useState("");
   const [items, setItems] = useState([]);
   const [activeDatabase, setActiveDatabase] = useState(null);
-
+  const [searchDatabase, setSearchDatabase] = useState("");
   const handleChange = (event) => {
     setInputValue(event.target.value);
   };
-
+  const HandleSearchDatabase = (event) => {
+    setSearchDatabase(event.target.value);
+  };
   useEffect(() => {
     const storedDb = localStorage.getItem("activeDatabase");
     if (storedDb) {
       setActiveDatabase(storedDb);
     }
-
-    // fetch("http://localhost:4000/database/old")
-    //     .then(res => {
-    //         if (!res.ok) {
-    //             throw new Error("Hiba old_db");
-    //         }
-    //         return res.json();
-    //     })
-    //     .then(data => {
-    //         console.log("Sikeres old_db:", data);
-    //         setItems(data);
-    //     })
-    //     .catch(error => {
-    //         console.error("Hiba: ", error);
-    // });
-    fetchDatabases()
-      .then((data) => {
-        console.log("Sikeres old_db:", data);
-        setItems(data);
-      })
-      .catch((error) => {
-        console("fetchDB hiba: ", error);
-      });
-  }, []);
-
-  useEffect(() => {
-    const storedDb = localStorage.getItem("activeDatabase");
-    if (storedDb) {
-      setActiveDatabase(storedDb);
-    }
-
-    fetch("http://localhost:4000/database/old")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Hiba old_db");
-        }
-        return res.json();
-      })
-      .then((data) => {
-        console.log("Sikeres old_db:", data);
-        setItems(data);
-      })
-      .catch((error) => {
-        console.error("Hiba: ", error);
-      });
   }, []);
 
   const handleSubmit = async () => {
@@ -81,8 +38,7 @@ function DatabaseName({ onDBCreated }) {
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       } else {
-        setItems([...items, newDatabase]); // Add to list
-        setInputValue(""); // Clear input
+        setInputValue("");
       }
     } catch (error) {
       console.error("Error sending data:", error);
@@ -130,6 +86,23 @@ function DatabaseName({ onDBCreated }) {
     }
   };
 
+  const validateDatabase = async (dbName) => {
+    try {
+      const response = await fetch("http://localhost:4000/database/isvalid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: dbName }),
+      });
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      } else {
+        setItems([dbName]); // Add to list
+        setSearchDatabase("");
+      }
+    } catch (error) {
+      alert(error);
+    }
+  };
   return (
     <div className="database-container">
       <div className="database-input">
@@ -149,6 +122,15 @@ function DatabaseName({ onDBCreated }) {
 
       <div className="database-list">
         <h3>Databases:</h3>
+        <input
+          type="text"
+          placeholder="Search database..."
+          value={searchDatabase}
+          onChange={HandleSearchDatabase}
+        />
+        <button type="button" onClick={() => validateDatabase(searchDatabase)}>
+          Search
+        </button>
         <ul>
           {items.map((db) => (
             <li key={db}>

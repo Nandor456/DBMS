@@ -288,7 +288,7 @@ function isBoolean(elem) {
 }
 
 function isString(elem) {
-  typeof elem === "string";
+  return typeof elem === "string";
 }
 
 function isDate(elem) {
@@ -353,6 +353,83 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
   return true;
 }
 
+
+//UJ Lab3-hoz Insert esetben indexek updateje
+async function handleindexes(pk, partNames, parts, dbName, tableName) {
+  const db = client.db(dbName);
+  const collections = await db.listCollections().toArray();
+  const filteredCollections = collections.filter(collection =>
+    /ᛥindexes/.test(collection.name)  // '$' jelzi, hogy csak a végén legyen
+  );
+
+  let jsonData = JSON.parse(
+    fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
+  );
+  const primaryKeys = jsonData.metadata.PK;
+  const nonPkColumns = jsonData.column
+    .filter(column => !primaryKeys.includes(column.name))  // csak ami nem PK
+    .map(column => column.name);
+  let cols = [];
+  for (filter of filteredCollections) {
+    let index = 2;
+    let indexes = []
+    let element = " "
+    while (element !== undefined) {
+      element = filter.name.split("ᛥ")[index];
+      console.log(element)
+      if (element !== undefined) {
+        indexes.push(element)
+      }
+      index = index + 1;
+      console.log(element)
+    }
+    if (indexes.length > 0) {
+      //cols.push(indexes)
+      let final = "";
+      for (const ind of indexes) {
+        if (final === "") {
+          final = final + parts[ind];
+        } else {
+          final = final + "#" + parts[ind];
+        }
+      }
+      const collection = db.collection(filter.name);
+      const existingDoc = await collection.findOne({ _id: final });
+      if (existingDoc) {
+        // Ha létezik, frissítjük: hozzáadjuk az új partNames és parts értékeket
+        await collection.updateOne(
+          { _id: final },
+          {
+            $set: { value: existingDoc.value + "#" + pk }
+          }
+        );
+      } else {
+        // Ha nem létezik, létrehozunk egy új dokumentumot
+        await collection.insertOne({
+          _id: final,
+          value: [pk]
+        });
+      }
+      console.log(final, filter.name)
+    }
+  }
+  // for (const indes of cols) {
+  //   let final = "";
+  //   for (const ind of indes) {
+  //     if (final === "") {
+  //       final = final + nonPkColumns[ind];
+  //     } else {
+  //       final = final + "#" + nonPkColumns[ind];
+  //     }
+  //   }
+
+  // }
+  //console.log("cols: ", cols)
+  //console.log((filteredCollections.map(filt => filt.name.split("ᛥ")[2])))
+}
+
+
+handleindexes('ssssss22', 'd', ['elem2er', 'alma'], 'aaa', 'hes')
 //typeTest("Test", "Tester", [2]);
 
 // {
@@ -463,6 +540,7 @@ app.post("/database/row/insert", async (req, res) => {
       return res.status(400).send("Az egyik ertek unique, es mar letezik");
     }
     //Ha nem létezik, beszúrjuk
+    handleindexes(partNames, finalValues, db);
     await collection.insertOne({ _id: key, value: finalValues });
     console.log("beszurodott");
     res.json({ success: true });
@@ -609,7 +687,7 @@ app.post('/database/row/index', async (req, res) => { // column indexes
   console.log(use, dbName)
   let create = inserts.split(" ")[0];
   let index = inserts.split(" ")[1];
-  const indexName = inserts.split(" ")[2];
+  let indexName = inserts.split(" ")[2];
   let on = inserts.split(" ")[3];
   const tableName = inserts.split(" ")[4];
   console.log("ez az: ", inserts)
@@ -638,13 +716,36 @@ app.post('/database/row/index', async (req, res) => { // column indexes
     return res.status(400).send("Meg nem letezik a tabla");
   }
   if (await createIndex(indexName, columns, tableName, dbName)) {
-
+    return res.status(200).send("Sikeres index keszites")
   }
-  return res.status(200).send("Sikeres index keszites")
 })
+
 
 async function createIndex(indexName, columns, tableName, dbName) {
   const db = client.db(dbName);
+
+  let jsonData = JSON.parse(
+    fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
+  );
+  const primaryKeys = jsonData.metadata.PK;
+  const nonPkColumns = jsonData.column
+    .filter(column => !primaryKeys.includes(column.name))  // csak ami nem PK
+    .map(column => column.name);
+  let indexes = []
+  for (const [index, columnName] of nonPkColumns.entries()) {
+    console.log("columnName: ", columnName)
+    if (columns.includes(columnName)) {
+      indexes.push({
+        columnIndex: columns.indexOf(columnName), // hol van a columns tömbben
+        nonPkIndex: index // hol van a nem-pk oszlopok kozott
+      });
+    }
+  }
+
+  indexName = indexName + "ᛥindexes";
+  for (const index of indexes) {
+    indexName = indexName + "ᛥ" + index.nonPkIndex;
+  }
   const collections = await db.listCollections({ name: indexName }).toArray();
 
   if (collections.length > 0) {
@@ -654,28 +755,6 @@ async function createIndex(indexName, columns, tableName, dbName) {
     const collection = db.collection(indexName);
     const tableCollection = db.collection(tableName);
 
-    let jsonData = JSON.parse(
-      fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
-    );
-
-    const primaryKeys = jsonData.metadata.PK; // ["aa"]
-
-    const nonPkColumns = jsonData.column
-      .filter(column => !primaryKeys.includes(column.name))  // csak ami nem PK
-      .map(column => column.name);
-
-    console.log(nonPkColumns, primaryKeys)
-    let indexes = []
-    for (const [index, columnName] of nonPkColumns.entries()) {
-      //console.log(columnName)
-      console.log("columnName: ", columnName)
-      if (columns.includes(columnName)) {
-        indexes.push({
-          columnIndex: columns.indexOf(columnName), // hol van a columns tömbben
-          nonPkIndex: index // hol van a nem-pk oszlopok kozott
-        });
-      }
-    }
     if (indexes.length !== columns.length) {      //minden megadott column letezzen
       console.log("Nem letezik valamelyik column")
       return -1;
@@ -713,4 +792,4 @@ async function createIndex(indexName, columns, tableName, dbName) {
 
 }
 
-createIndex("dsad", ['ez', 'az'], "hes", "aaa")
+//createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")

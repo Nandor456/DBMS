@@ -11,7 +11,6 @@ function CollectionName({ onTableCreated }) {
     metadata: { PK: [], FK: [] },
     constraints: {},
     column: [{ name: "", type: "" }],
-    inserted: {},
   });
 
   useEffect(() => {
@@ -125,6 +124,32 @@ function CollectionName({ onTableCreated }) {
           ...prev.metadata,
           FK: updatedFKs,
         },
+      };
+    });
+  };
+
+  const handleColumnChangeConstraints = (columnName, value) => {
+    setColumns((prev) => {
+      let updatedConstraints = { ...prev.constraints };
+
+      if (value === "Unique") {
+        if (!updatedConstraints.uniques) {
+          updatedConstraints.uniques = [];
+        }
+        if (!updatedConstraints.uniques.includes(columnName)) {
+          updatedConstraints.uniques.push(columnName);
+        }
+      } else {
+        if (updatedConstraints.uniques) {
+          updatedConstraints.uniques = updatedConstraints.uniques.filter(
+            (col) => col !== columnName
+          );
+        }
+      }
+
+      return {
+        ...prev,
+        constraints: updatedConstraints,
       };
     });
   };
@@ -316,6 +341,17 @@ function CollectionName({ onTableCreated }) {
               }}
             />
           )}
+          <select
+            value={
+              columns.constraints.uniques?.includes(col.name) ? "Unique" : "Not"
+            }
+            onChange={(e) =>
+              handleColumnChangeConstraints(col.name, e.target.value)
+            }
+          >
+            <option value="Not">Not</option>
+            <option value="Unique">Unique</option>
+          </select>
           <button onClick={() => handleRemoveColumn(index)}>-</button>
         </div>
       ))}

@@ -28,8 +28,8 @@ function Query() {
     let method;
     let method_type;
     try {
-      method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase();
-      if (method === "insert") {
+      method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase(); //? miatt ha nem letezik [1] az undefined lesz nem dog hibat
+      if (method === "insert" || method === "create") {
         method_type = "POST";
       } else if (method === "delete") {
         method_type = "DELETE";
@@ -130,7 +130,7 @@ function Query() {
               backgroundColor: "transparent",
               fontFamily: "inherit",
               height: "1200px",
-              width: "1500px",
+              width: "1100px",
               overflow: "auto",
             }}
           />

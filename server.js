@@ -364,8 +364,8 @@ async function handleindexes(pk, parts, dbName, tableName) {
   console.log("baj: ", parts);
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
-  const filteredCollections = collections.filter(
-    (collection) => /ᛥindexes/.test(collection.name) // '$' jelzi, hogy csak a végén legyen
+  const filteredCollections = collections.filter((collection) =>
+    /ᛥindexes/.test(collection.name)
   );
 
   let jsonData = JSON.parse(
@@ -377,7 +377,7 @@ async function handleindexes(pk, parts, dbName, tableName) {
     .map((column) => column.name);
   let cols = [];
   for (filter of filteredCollections) {
-    let index = 2;
+    let index = 3;
     let indexes = [];
     let element = " ";
     while (element !== undefined) {
@@ -428,7 +428,7 @@ async function handleindexes(pk, parts, dbName, tableName) {
 //   "query": "\n\nUSE Test;\n\nINSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
 // }
 //USE Test;
-//INSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
+//INSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')
 app.post("/database/row/insert", async (req, res) => {
   const { query } = req.body;
   let data = JSON.parse(fs.readFileSync(dbFile));
@@ -799,6 +799,7 @@ app.post("/database/row/index", async (req, res) => {
   if (await createIndex(indexName, columns, tableName, dbName)) {
     return res.status(200).send("Sikeres index keszites");
   }
+  return res.status(400).send("Mar letezik az index");
 });
 
 async function createIndex(indexName, columns, tableName, dbName) {
@@ -822,7 +823,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
     }
   }
 
-  indexName = indexName + "ᛥindexes";
+  indexName = indexName + `ᛥ${tableName}ᛥindexes`;
   for (const index of indexes) {
     indexName = indexName + "ᛥ" + index.nonPkIndex;
   }
@@ -830,7 +831,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
 
   if (collections.length > 0) {
     console.log("Collection already exists:", indexName);
-    return 1;
+    return 0;
   } else {
     const collection = db.collection(indexName);
     const tableCollection = db.collection(tableName);
@@ -871,6 +872,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
       await collection.insertOne({ _id: key, value: value });
       console.log("egy beszuras");
     }
+    return 1;
   }
 }
 

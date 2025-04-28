@@ -203,6 +203,7 @@ function keyF(partNames, parts, tableName, dbName) {
   const indexes = [];
   for (const [index, partName] of partNames.entries()) {
     if (pks.map((pk) => pk.toUpperCase()).includes(partName.toUpperCase())) {
+    if (pks.map((pk) => pk.toUpperCase()).includes(partName.toUpperCase())) {
       indexes.push(index);
     }
   }
@@ -229,6 +230,7 @@ function valueF(partNames, parts, indexes, dbName, tableName) {
   const columnNames = jsonData.column.map((col) => col.name.toUpperCase());
   console.log("He: ", columnNames, columnNames.length);
   console.log("He2: ", partNames);
+  console.log("He2: ", partNames);
   if (columnNames.length === partNames.length) {
     for (const [index, part] of parts.entries()) {
       console.log("part: ", part);
@@ -244,12 +246,14 @@ function valueF(partNames, parts, indexes, dbName, tableName) {
         }
       } else {
         console.log("hiba: 1");
+        console.log("hiba: 1");
         return -1;
       }
     }
-    //console.log(finalValues);
+    console.log(finalValues);
     return finalValues;
   }
+  console.log("hiba: 2");
   console.log("hiba: 2");
   return -1;
 }
@@ -340,11 +344,13 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
   );
   //console.log("haaaaalo: ", jsonData.constraints.uniques, partNames)
   let indexes = [];
+  console.log("hiba3: ", jsonData.metadata.PK, partNames);
   for (const [index, partName] of partNames
-    .filter((partName) => !jsonData.metadata.PK.includes(partName))
+    .filter((partName) => !jsonData.metadata?.PK?.includes(partName))
     .entries()) {
     //console.log(partName)
-    if (jsonData.constraints.uniques.includes(partName)) {
+
+    if (jsonData.constraints?.uniques?.includes(partName)) {
       indexes.push(index);
     }
   }
@@ -382,18 +388,23 @@ async function handleindexes(pk, parts, dbName, tableName) {
   const nonPkColumns = jsonData.column
     .filter((column) => !primaryKeys.includes(column.name)) // csak ami nem PK
     .map((column) => column.name);
+    .filter((column) => !primaryKeys.includes(column.name)) // csak ami nem PK
+    .map((column) => column.name);
   let cols = [];
   for (filter of filteredCollections) {
-    let index = 2;
+    let index = 3;
     let indexes = [];
     let element = " ";
     while (element !== undefined) {
       element = filter.name.split("ᛥ")[index];
       console.log(element);
+      console.log(element);
       if (element !== undefined) {
+        indexes.push(element);
         indexes.push(element);
       }
       index = index + 1;
+      console.log(element);
       console.log(element);
     }
     if (indexes.length > 0) {
@@ -421,8 +432,13 @@ async function handleindexes(pk, parts, dbName, tableName) {
         await collection.insertOne({
           _id: final,
           value: pk,
+          value: pk,
         });
       }
+      console.log(final, filter.name);
+    }
+  }
+}
       console.log(final, filter.name);
     }
   }
@@ -448,7 +464,7 @@ async function handleindexes(pk, parts, dbName, tableName) {
 //   "query": "\n\nUSE Test;\n\nINSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
 // }
 //USE Test;
-//INSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')"
+//INSERT IntO HasznalomFK (PK, Semmi, Elso) VALUES ('1', 2004/01/01, 'true')
 app.post("/database/row/insert", async (req, res) => {
   const { query } = req.body;
   let data = JSON.parse(fs.readFileSync(dbFile));
@@ -545,12 +561,14 @@ app.post("/database/row/insert", async (req, res) => {
   //await collection.createIndex({ key: 1 }, { unique: true });
   //QQQQQQ
   try {
+    console.log("hiba1");
     // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
     const existing = await collection.findOne({ _id: key });
     if (existing) {
       console.log("Ez a kulcs már létezik!");
       return res.status(400).send("Ez a kulcs már létezik!");
     }
+    console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
     if (
       !(await unique(
         partNames,
@@ -564,7 +582,9 @@ app.post("/database/row/insert", async (req, res) => {
       return res.status(400).send("Az egyik ertek unique, es mar letezik");
     }
     //Ha nem létezik, beszúrjuk
+    console.log("index elott");
     handleindexes(key, finalValues, dbName, tableName);
+    console.log("index megoldva");
     await collection.insertOne({ _id: key, value: finalValues });
     console.log("beszurodott");
     res.json({ success: true });
@@ -614,6 +634,60 @@ const whichID = (condition, dbName, tableName) => {
 
   return keyParts.join("#");
 };
+
+async function fkissue(pk, dbName, tableName) {
+  const tableData = JSON.parse(fs.readFileSync(tableFile));
+  const tables = tableData[dbName] || [];
+
+  const db = client.db(dbName);
+
+  for (const otherTable of tables) {
+    if (otherTable === tableName) continue;
+
+    const otherTableJson = JSON.parse(
+      fs.readFileSync(`test/${dbName}/${otherTable}/column.json`)
+    );
+
+    const fkList = otherTableJson.metadata.FK || [];
+
+    for (const fk of fkList) {
+      const fkTableName = fk.FKTableName;
+      const fkColumnName = fk.FKName;
+
+      if (fkTableName === tableName) {
+        const foreignTable = db.collection(otherTable);
+        const notPkValues = otherTableJson.column.filter(
+          (column) => !otherTableJson.metadata.PK.includes(column.name)
+        );
+
+        let foreignIndex = -1;
+        for (const [index, notPkValue] of notPkValues.entries()) {
+          if (notPkValue.name === fkColumnName) {
+            foreignIndex = index;
+            break;
+          }
+        }
+
+        if (foreignIndex === -1) {
+          return 1;
+        }
+
+        const cursor = await foreignTable.find({}).toArray();
+        for (const foreignTableValue of cursor) {
+          if (foreignTableValue.value.split("#")[foreignIndex] === pk) {
+            // Itt NEM dobunk hibát, hanem visszaadunk egy jelet
+            return {
+              blocked: true,
+              table: otherTable,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return { blocked: false };
+}
 
 //USE Namost;
 //Delete from Tablam where elso='2'
@@ -666,6 +740,17 @@ app.delete("/database/row/delete", async (req, res) => {
   if (!value || value === -1) {
     return res.status(400).send("Nem jol adta meg az id-t");
   }
+
+  // Itt vizsgáljuk FK-t!
+  const fkResult = await fkissue(value, dbName, tableName);
+  if (fkResult.blocked) {
+    return res
+      .status(400)
+      .send(
+        `Nem lehet törölni, mert az '${fkResult.table}' táblában létezik hivatkozás az adott rekordra`
+      );
+  }
+
   const db = client.db(dbName);
   const collection = db.collection(tableName);
 
@@ -750,6 +835,7 @@ app.post("/database/row/create", async (req, res) => {
   if (await createIndex(indexName, columns, tableName, dbName)) {
     return res.status(200).send("Sikeres index keszites");
   }
+  return res.status(400).send("Mar letezik az index");
 });
 
 async function createIndex(indexName, columns, tableName, dbName) {
@@ -773,7 +859,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
     }
   }
 
-  indexName = indexName + "ᛥindexes";
+  indexName = indexName + `ᛥ${tableName}ᛥindexes`;
   for (const index of indexes) {
     indexName = indexName + "ᛥ" + index.nonPkIndex;
   }
@@ -781,7 +867,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
 
   if (collections.length > 0) {
     console.log("Collection already exists:", indexName);
-    return 1;
+    return 0;
   } else {
     const collection = db.collection(indexName);
     const tableCollection = db.collection(tableName);
@@ -822,7 +908,9 @@ async function createIndex(indexName, columns, tableName, dbName) {
       await collection.insertOne({ _id: key, value: value });
       console.log("egy beszuras");
     }
+    return 1;
   }
 }
 
 //createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")
+

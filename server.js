@@ -203,23 +203,23 @@ function keyF(partNames, parts, tableName, dbName) {
   const indexes = [];
   for (const [index, partName] of partNames.entries()) {
     if (pks.map((pk) => pk.toUpperCase()).includes(partName.toUpperCase())) {
-    if (pks.map((pk) => pk.toUpperCase()).includes(partName.toUpperCase())) {
-      indexes.push(index);
+      if (pks.map((pk) => pk.toUpperCase()).includes(partName.toUpperCase())) {
+        indexes.push(index);
+      }
     }
-  }
-  //console.log(indexes);
-  let key = "";
-  for (const index of indexes) {
-    if (key === "") {
-      key = key + parts[index];
-    } else {
-      key = key + "#" + parts[index];
+    //console.log(indexes);
+    let key = "";
+    for (const index of indexes) {
+      if (key === "") {
+        key = key + parts[index];
+      } else {
+        key = key + "#" + parts[index];
+      }
     }
+    //console.log("dasdasdsadsadsadsadasdasdsa : ", indexes);
+    return { key, indexes };
   }
-  //console.log("dasdasdsadsadsadsadasdasdsa : ", indexes);
-  return { key, indexes };
 }
-
 //key(["PK2", "PK1"], ["Alice", "25"], "Tester", "Test");
 
 function valueF(partNames, parts, indexes, dbName, tableName) {
@@ -388,8 +388,6 @@ async function handleindexes(pk, parts, dbName, tableName) {
   const nonPkColumns = jsonData.column
     .filter((column) => !primaryKeys.includes(column.name)) // csak ami nem PK
     .map((column) => column.name);
-    .filter((column) => !primaryKeys.includes(column.name)) // csak ami nem PK
-    .map((column) => column.name);
   let cols = [];
   for (filter of filteredCollections) {
     let index = 3;
@@ -439,23 +437,19 @@ async function handleindexes(pk, parts, dbName, tableName) {
     }
   }
 }
-      console.log(final, filter.name);
-    }
-  }
-  // for (const indes of cols) {
-  //   let final = "";
-  //   for (const ind of indes) {
-  //     if (final === "") {
-  //       final = final + nonPkColumns[ind];
-  //     } else {
-  //       final = final + "#" + nonPkColumns[ind];
-  //     }
-  //   }
+// for (const indes of cols) {
+//   let final = "";
+//   for (const ind of indes) {
+//     if (final === "") {
+//       final = final + nonPkColumns[ind];
+//     } else {
+//       final = final + "#" + nonPkColumns[ind];
+//     }
+//   }
 
-  // }
-  //console.log("cols: ", cols)
-  //console.log((filteredCollections.map(filt => filt.name.split("ᛥ")[2])))
-}
+// }
+//console.log("cols: ", cols)
+//console.log((filteredCollections.map(filt => filt.name.split("ᛥ")[2])))
 
 //handleindexes('ssssss22', 'd', ['elem2er', 'alma'], 'aaa', 'hes')
 //typeTest("Test", "Tester", [2]);
@@ -913,4 +907,3 @@ async function createIndex(indexName, columns, tableName, dbName) {
 }
 
 //createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")
-

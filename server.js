@@ -396,10 +396,10 @@ async function handleindexes(pk, parts, dbName, tableName) {
     while (element !== undefined) {
       element = filter.name.split("ᛥ")[index];
       console.log(element);
-      console.log(element);
+      //console.log(element);
       if (element !== undefined) {
         indexes.push(element);
-        indexes.push(element);
+        //indexes.push(element);
       }
       index = index + 1;
       console.log(element);

@@ -1,13 +1,14 @@
 //JAvitani:   - touppercase az insertnel kivenni a partnamenel
 //            - az insertnel a partname-ek beolvasnanl ossze vissza irodhatnak es nem veszi eszre (tehat ha egy oszlop nev asd akkor mas oszlopnak is azt adjuk meg hogy asd, akkor azt fogja hinni a kod hogy jo es hibak lesznek ott, ezt meg atnezni)
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
-const { inspect } = require("util");
-const { MongoClient } = require("mongodb");
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import fs from "fs";
+import path from "path";
+import { inspect } from "util";
+import { MongoClient } from "mongodb";
+import SelectRouter from "./server/routes/select.js";
 
 const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
@@ -906,4 +907,10 @@ async function createIndex(indexName, columns, tableName, dbName) {
   }
 }
 
+app.use((req, res, next) => {
+  console.log(`Request to: ${req.url}`);
+  next();
+});
+
 //createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")
+app.use("/database/row/select", SelectRouter);

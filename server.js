@@ -6,6 +6,8 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import { inspect } from "util";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
@@ -15,7 +17,7 @@ const client = new MongoClient(uri);
 const app = express();
 app.use(express.json());
 app.use(cors());
-
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbFile = "databases.json";
 const folder = "test";
 const tableFile = "table.json";
@@ -118,7 +120,7 @@ app.post("/database/table", (req, res) => {
   res.json({ message: `Adatbazis '${database}'-ban '${table}' letrehozva` });
   console.log(folderPath);
 
-  filePath = path.join(folderPath, "column.json");
+  const filePath = path.join(folderPath, "column.json");
   const jsonData = { columns };
 
   fs.writeFileSync(filePath, JSON.stringify(columns, null, 2));
@@ -229,33 +231,33 @@ function valueF(partNames, parts, indexes, dbName, tableName) {
     fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
   );
   const columnNames = jsonData.column.map((col) => col.name.toUpperCase());
-  console.log("He: ", columnNames, columnNames.length);
-  console.log("He2: ", partNames);
-  console.log("He2: ", partNames);
+  //console.log("He: ", columnNames, columnNames.length);
+  //console.log("He2: ", partNames);
+  //console.log("He2: ", partNames);
   if (columnNames.length === partNames.length) {
     for (const [index, part] of parts.entries()) {
-      console.log("part: ", part);
+      //console.log("part: ", part);
       if (columnNames.includes(partNames[index].toUpperCase())) {
-        console.log("indexes:", indexes);
+        //console.log("indexes:", indexes);
         if (!indexes.includes(index)) {
           if (finalValues === "") {
             finalValues = part;
-            console.log(part);
+            //console.log(part);
           } else {
             finalValues = finalValues + "#" + part;
           }
         }
       } else {
-        console.log("hiba: 1");
-        console.log("hiba: 1");
+        //console.log("hiba: 1");
+        //console.log("hiba: 1");
         return -1;
       }
     }
-    console.log(finalValues);
+    //console.log(finalValues);
     return finalValues;
   }
-  console.log("hiba: 2");
-  console.log("hiba: 2");
+  //console.log("hiba: 2");
+  //console.log("hiba: 2");
   return -1;
 }
 // if (
@@ -345,7 +347,7 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
   );
   //console.log("haaaaalo: ", jsonData.constraints.uniques, partNames)
   let indexes = [];
-  console.log("hiba3: ", jsonData.metadata.PK, partNames);
+  //console.log("hiba3: ", jsonData.metadata.PK, partNames);
   for (const [index, partName] of partNames
     .filter((partName) => !jsonData.metadata?.PK?.includes(partName))
     .entries()) {
@@ -369,13 +371,13 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
       }
     }
   }
-  console.log("true volt");
+  //console.log("true volt");
   return true;
 }
 
 //UJ Lab3-hoz Insert esetben indexek updateje
 async function handleindexes(pk, parts, dbName, tableName) {
-  console.log("baj: ", parts);
+  //console.log("baj: ", parts);
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
   const filteredCollections = collections.filter(
@@ -475,19 +477,19 @@ app.post("/database/row/insert", async (req, res) => {
   const inserts = elements.pop();
   const firstElement = elements.pop();
   let use = firstElement.split(" ")[0];
-  console.log("USe: ", use);
+  //console.log("USe: ", use);
   const dbName = firstElement.split(" ")[1].replace(/;$/, "");
-  console.log(dbName);
+  //console.log(dbName);
   //console.log(inserts);
   let insert = inserts.split(" ")[0] + " " + inserts.split(" ")[1];
   //console.log("insert: ", insert);
   const tableName = inserts.split("(")[0].split(" ")[2].trim();
-  console.log("tableName: ", tableName);
+  //console.log("tableName: ", tableName);
   const columns = inserts.split("(")[1].split(")")[0];
-  console.log("column", columns);
+  //console.log("column", columns);
   let value = inserts.split(")")[1].split("(")[0];
   const values = inserts.split("(")[2].split(")")[0];
-  console.log("Values: ", values);
+  //console.log("Values: ", values);
   //console.log("Csak columns-ek: ", columns);
   //console.log(insert);
   insert = insert.toUpperCase();
@@ -538,7 +540,7 @@ app.post("/database/row/insert", async (req, res) => {
 
   //console.log("dsadasdasdsadadasd:     ", tableName, dbName);
   const { key, indexes } = keyF(partNames, parts, tableName, dbName);
-  console.log("itt a pk: ", key);
+  //console.log("itt a pk: ", key);
   //console.log(indexes);
   //console.log("Kulcsok: ", key);
   const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
@@ -556,14 +558,14 @@ app.post("/database/row/insert", async (req, res) => {
   //await collection.createIndex({ key: 1 }, { unique: true });
   //QQQQQQ
   try {
-    console.log("hiba1");
+    //console.log("hiba1");
     // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
     const existing = await collection.findOne({ _id: key });
     if (existing) {
       console.log("Ez a kulcs már létezik!");
-      return res.status(400).send("Ez a kulcs már létezik!");
+      return res.json({ error: "Ez a kulcs már létezik!" });
     }
-    console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
+    //console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
     if (
       !(await unique(
         partNames,
@@ -577,11 +579,11 @@ app.post("/database/row/insert", async (req, res) => {
       return res.status(400).send("Az egyik ertek unique, es mar letezik");
     }
     //Ha nem létezik, beszúrjuk
-    console.log("index elott");
+    //console.log("index elott");
     handleindexes(key, finalValues, dbName, tableName);
-    console.log("index megoldva");
+    //console.log("index megoldva");
     await collection.insertOne({ _id: key, value: finalValues });
-    console.log("beszurodott");
+    //console.log("beszurodott");
     res.json({ success: true });
   } catch (err) {
     console.error(err);

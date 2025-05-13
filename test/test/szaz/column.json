@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "PK": [
+      "id"
+    ],
+    "FK": []
+  },
+  "constraints": {},
+  "column": [
+    {
+      "name": "id",
+      "type": "number"
+    },
+    {
+      "name": "same",
+      "type": "string"
+    }
+  ]
+}

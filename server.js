@@ -11,13 +11,15 @@ import { fileURLToPath } from "url";
 import { inspect } from "util";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
 const app = express();
 app.use(express.json());
 app.use(cors());
-const __dirname = dirname(fileURLToPath(import.meta.url));
 const dbFile = "databases.json";
 const folder = "test";
 const tableFile = "table.json";

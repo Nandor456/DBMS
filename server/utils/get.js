@@ -105,4 +105,3 @@ export function flattenConditions(tree) {
 
   return result;
 }
-

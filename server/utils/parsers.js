@@ -203,8 +203,6 @@ function parseTokens(tokens) {
   return { conditions, logicalOperators: logicalOps };
 }
 
-
-
 function validateConditionTypes(conditions, columnTypesMap) {
   for (const cond of conditions) {
     if (Array.isArray(cond.conditions)) {

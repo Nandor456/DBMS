@@ -9,7 +9,10 @@ import path from "path";
 import { inspect } from "util";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
 const app = express();
@@ -118,7 +121,7 @@ app.post("/database/table", (req, res) => {
   res.json({ message: `Adatbazis '${database}'-ban '${table}' letrehozva` });
   console.log(folderPath);
 
-  filePath = path.join(folderPath, "column.json");
+  const filePath = path.join(folderPath, "column.json");
   const jsonData = { columns };
 
   fs.writeFileSync(filePath, JSON.stringify(columns, null, 2));

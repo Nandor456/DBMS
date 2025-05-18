@@ -1,9 +1,13 @@
 {
   "metadata": {
-    "PK": [
-      "id"
-    ],
-    "FK": []
+    "PK": ["id"],
+    "FK": [],
+    "indexedColumns": [
+      {
+        "column": ["age"],
+        "name": "age_index"
+      }
+    ]
   },
   "constraints": {},
   "column": [

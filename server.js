@@ -2,15 +2,13 @@
 //            - az insertnel a partname-ek beolvasnanl ossze vissza irodhatnak es nem veszi eszre (tehat ha egy oszlop nev asd akkor mas oszlopnak is azt adjuk meg hogy asd, akkor azt fogja hinni a kod hogy jo es hibak lesznek ott, ezt meg atnezni)
 
 import express from "express";
-import bodyParser from "body-parser";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
-import { inspect } from "util";
+import { dirname } from "path";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const uri = "mongodb://localhost:27017/";
@@ -18,7 +16,6 @@ const client = new MongoClient(uri);
 const app = express();
 app.use(express.json());
 app.use(cors());
-
 const dbFile = "databases.json";
 const folder = "test";
 const tableFile = "table.json";
@@ -26,6 +23,9 @@ const tableFile = "table.json";
 async function startServer() {
   await client.connect();
   app.listen(4000, () => console.log("Szerver fut a 4000-es porton!"));
+}
+export function getDBClient() {
+  return client;
 }
 
 startServer();
@@ -232,33 +232,33 @@ function valueF(partNames, parts, indexes, dbName, tableName) {
     fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
   );
   const columnNames = jsonData.column.map((col) => col.name.toUpperCase());
-  console.log("He: ", columnNames, columnNames.length);
-  console.log("He2: ", partNames);
-  console.log("He2: ", partNames);
+  //console.log("He: ", columnNames, columnNames.length);
+  //console.log("He2: ", partNames);
+  //console.log("He2: ", partNames);
   if (columnNames.length === partNames.length) {
     for (const [index, part] of parts.entries()) {
-      console.log("part: ", part);
+      //console.log("part: ", part);
       if (columnNames.includes(partNames[index].toUpperCase())) {
-        console.log("indexes:", indexes);
+        //console.log("indexes:", indexes);
         if (!indexes.includes(index)) {
           if (finalValues === "") {
             finalValues = part;
-            console.log(part);
+            //console.log(part);
           } else {
             finalValues = finalValues + "#" + part;
           }
         }
       } else {
-        console.log("hiba: 1");
-        console.log("hiba: 1");
+        //console.log("hiba: 1");
+        //console.log("hiba: 1");
         return -1;
       }
     }
-    console.log(finalValues);
+    //console.log(finalValues);
     return finalValues;
   }
-  console.log("hiba: 2");
-  console.log("hiba: 2");
+  //console.log("hiba: 2");
+  //console.log("hiba: 2");
   return -1;
 }
 // if (
@@ -348,7 +348,7 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
   );
   //console.log("haaaaalo: ", jsonData.constraints.uniques, partNames)
   let indexes = [];
-  console.log("hiba3: ", jsonData.metadata.PK, partNames);
+  //console.log("hiba3: ", jsonData.metadata.PK, partNames);
   for (const [index, partName] of partNames
     .filter((partName) => !jsonData.metadata?.PK?.includes(partName))
     .entries()) {
@@ -372,13 +372,13 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
       }
     }
   }
-  console.log("true volt");
+  //console.log("true volt");
   return true;
 }
 
 //UJ Lab3-hoz Insert esetben indexek updateje
 async function handleindexes(pk, parts, dbName, tableName) {
-  console.log("baj: ", parts);
+  //console.log("baj: ", parts);
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
   const filteredCollections = collections.filter(
@@ -478,19 +478,19 @@ app.post("/database/row/insert", async (req, res) => {
   const inserts = elements.pop();
   const firstElement = elements.pop();
   let use = firstElement.split(" ")[0];
-  console.log("USe: ", use);
+  //console.log("USe: ", use);
   const dbName = firstElement.split(" ")[1].replace(/;$/, "");
-  console.log(dbName);
+  //console.log(dbName);
   //console.log(inserts);
   let insert = inserts.split(" ")[0] + " " + inserts.split(" ")[1];
   //console.log("insert: ", insert);
   const tableName = inserts.split("(")[0].split(" ")[2].trim();
-  console.log("tableName: ", tableName);
+  //console.log("tableName: ", tableName);
   const columns = inserts.split("(")[1].split(")")[0];
-  console.log("column", columns);
+  //console.log("column", columns);
   let value = inserts.split(")")[1].split("(")[0];
   const values = inserts.split("(")[2].split(")")[0];
-  console.log("Values: ", values);
+  //console.log("Values: ", values);
   //console.log("Csak columns-ek: ", columns);
   //console.log(insert);
   insert = insert.toUpperCase();
@@ -541,7 +541,7 @@ app.post("/database/row/insert", async (req, res) => {
 
   //console.log("dsadasdasdsadadasd:     ", tableName, dbName);
   const { key, indexes } = keyF(partNames, parts, tableName, dbName);
-  console.log("itt a pk: ", key);
+  //console.log("itt a pk: ", key);
   //console.log(indexes);
   //console.log("Kulcsok: ", key);
   const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
@@ -559,14 +559,14 @@ app.post("/database/row/insert", async (req, res) => {
   //await collection.createIndex({ key: 1 }, { unique: true });
   //QQQQQQ
   try {
-    console.log("hiba1");
+    //console.log("hiba1");
     // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
     const existing = await collection.findOne({ _id: key });
     if (existing) {
       console.log("Ez a kulcs már létezik!");
-      return res.status(400).send("Ez a kulcs már létezik!");
+      return res.json({ error: "Ez a kulcs már létezik!" });
     }
-    console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
+    //console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
     if (
       !(await unique(
         partNames,
@@ -580,11 +580,16 @@ app.post("/database/row/insert", async (req, res) => {
       return res.status(400).send("Az egyik ertek unique, es mar letezik");
     }
     //Ha nem létezik, beszúrjuk
-    console.log("index elott");
+    //console.log("index elott");
     handleindexes(key, finalValues, dbName, tableName);
-    console.log("index megoldva");
+    //console.log("index megoldva");
     await collection.insertOne({ _id: key, value: finalValues });
-    console.log("beszurodott");
+    jsonData.metadata.indexedColumns.push(key);
+    fs.writeFileSync(
+      `test/${dbName}/${tableName}/column.json`,
+      JSON.stringify(jsonData, null, 2)
+    );
+    //console.log("beszurodott");
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -768,6 +773,8 @@ app.delete("/database/row/delete", async (req, res) => {
 app.post("/database/row/create", async (req, res) => {
   // column indexes
   const { query } = req.body;
+  console.log("creating index");
+
   let data = JSON.parse(fs.readFileSync(dbFile));
   let tableData = JSON.parse(fs.readFileSync(tableFile));
   //  console.log(query);
@@ -838,7 +845,6 @@ app.post("/database/row/create", async (req, res) => {
 
 async function createIndex(indexName, columns, tableName, dbName) {
   const db = client.db(dbName);
-
   let jsonData = JSON.parse(
     fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
   );
@@ -856,7 +862,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
       });
     }
   }
-
+  const initIndexName = indexName;
   indexName = indexName + `ᛥ${tableName}ᛥindexes`;
   for (const index of indexes) {
     indexName = indexName + "ᛥ" + index.nonPkIndex;
@@ -869,6 +875,8 @@ async function createIndex(indexName, columns, tableName, dbName) {
   } else {
     const collection = db.collection(indexName);
     const tableCollection = db.collection(tableName);
+    console.log(indexes);
+    console.log(columns);
 
     if (indexes.length !== columns.length) {
       //minden megadott column letezzen
@@ -906,6 +914,14 @@ async function createIndex(indexName, columns, tableName, dbName) {
       await collection.insertOne({ _id: key, value: value });
       console.log("egy beszuras");
     }
+    jsonData.metadata.indexedColumns.push({
+      column: columns,
+      name: initIndexName,
+    });
+    fs.writeFileSync(
+      `test/${dbName}/${tableName}/column.json`,
+      JSON.stringify(jsonData, null, 2)
+    );
     return 1;
   }
 }
@@ -916,4 +932,4 @@ app.use((req, res, next) => {
 });
 
 //createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")
-app.use("/database/row/select", SelectRouter);
+app.use(SelectRouter);

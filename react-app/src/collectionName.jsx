@@ -8,7 +8,7 @@ function CollectionName({ onTableCreated }) {
   const [availableTables, setAvailableTables] = useState([]);
   //const [tablesByDb, setTablesByDb] = useState([]);
   const [columns, setColumns] = useState({
-    metadata: { PK: [], FK: [] },
+    metadata: { PK: [], FK: [], indexedColumns: [] },
     constraints: {},
     column: [{ name: "", type: "" }],
   });

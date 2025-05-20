@@ -8,6 +8,7 @@ import path from "path";
 import { dirname } from "path";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
+import { getColumns } from "./server/utils/getDbData.js";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -557,9 +558,10 @@ app.post("/database/row/insert", async (req, res) => {
   const collection = db.collection(tableName);
   //Ha meg nem letezett az adabazis - key - indexnek allitjuk
   //await collection.createIndex({ key: 1 }, { unique: true });
-  //QQQQQQ
   try {
-    //console.log("hiba1");
+    let jsonData = JSON.parse(
+      fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
+    );
     // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
     const existing = await collection.findOne({ _id: key });
     if (existing) {
@@ -929,6 +931,16 @@ async function createIndex(indexName, columns, tableName, dbName) {
 app.use((req, res, next) => {
   console.log(`Request to: ${req.url}`);
   next();
+});
+
+app.post("/database/columns", (req, res) => {
+  const { database, table } = req.body;
+  if (!database || !table) {
+    return res.status(400).json({ error: "Missing database or table" });
+  }
+
+  const columns = getColumns(database, table);
+  res.json({ columns });
 });
 
 //createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")

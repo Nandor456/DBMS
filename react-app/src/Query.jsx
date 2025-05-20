@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@mui/material";
 import { fetchDatabases } from "./utils/OldDatabaseFunction";
 import { fetchTables } from "./utils/OldTableFunction";
@@ -16,7 +16,6 @@ function Query() {
   const keywords = ["SELECT", "FROM", "INSERT", "DELETE", "UPDATE", "TABLE"];
   const [dynamics, setDynamics] = useState([]);
   const [dynamicColumns, setDynamicColumns] = useState([]);
-  const editorRef = useRef();
 
   useEffect(() => {
     const load = async () => {

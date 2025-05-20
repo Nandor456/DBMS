@@ -34,15 +34,15 @@ function DatabaseName({ onDBCreated }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(jsonData),
       });
-
+      const responseData = await response.json();
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(responseData.message);
       } else {
         setInputValue("");
       }
     } catch (error) {
       console.error("Error sending data:", error);
-      alert("Failed to send JSON data.");
+      alert(error);
     }
 
     if (typeof onDBCreated === "function") {
@@ -93,8 +93,9 @@ function DatabaseName({ onDBCreated }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: dbName }),
       });
+      const responseData = await response.json();
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(responseData.message);
       } else {
         setItems([dbName]); // Add to list
         setSearchDatabase("");

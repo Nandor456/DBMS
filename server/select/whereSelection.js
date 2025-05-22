@@ -16,7 +16,6 @@ export async function whereSelection(condition) {
       `test/${condition.dbName}/${condition.collName}/column.json`
     )
   );
-  let n = 0;
   const indexedColumns = jsonData.metadata.indexedColumns;
   const nonIndexedConditions = condition.conditions.filter((elem) => {
     if (typeof elem !== "object") return false;
@@ -50,7 +49,6 @@ export async function whereSelection(condition) {
     );
 
     if (!simpleIndex) continue;
-    n++;
     const indexedFileName = getIndexedFileName(
       jsonData,
       columnName,
@@ -84,41 +82,69 @@ export async function whereSelection(condition) {
 
     resultSets.push(matched);
   }
-  console.log(resultSets);
-  if (resultSets.length === 0) {
-    return { success: true, result: [] };
-  }
-
-  // Now reduce based on operators (assumes only "AND" for now)
-  let result = resultSets[0];
-  for (let i = 1; i < resultSets.length; i++) {
-    const op = operators[i - 1]; // logical operator between i-1 and i
-    if (op === "AND") {
-      result = intersectArrays(result, resultSets[i]);
-    } else {
-      return {
-        success: false,
-        message: `Unsupported logical operator "${op}"`,
-      };
-    }
-  }
   let indexedData = [];
 
-  for (let i = 0; i < result.length; i++) {
-    indexedData.push(
-      await client
-        .db(condition.dbName)
-        .collection(condition.collName)
-        .find({ _id: result[i] })
-        .toArray()
+  // Now reduce based on operators (assumes only "AND" for now)
+  if (resultSets.length !== 0) {
+    let result = resultSets[0];
+    for (let i = 1; i < resultSets.length; i++) {
+      const op = operators[i - 1]; // logical operator between i-1 and i
+      if (op === "AND") {
+        result = intersectArrays(result, resultSets[i]);
+      } else {
+        return {
+          success: false,
+          message: `Unsupported logical operator "${op}"`,
+        };
+      }
+    }
+    for (let i = 0; i < result.length; i++) {
+      indexedData.push(
+        await client
+          .db(condition.dbName)
+          .collection(condition.collName)
+          .findOne({ _id: result[i] })
+      );
+    }
+  }
+  //indexelt oszlopok szerint kapott eredmeny
+  console.log("indexedData: ", indexedData);
+  //TODO: berakni a pkt az indexed columnok koze
+  //vesszuk a nem indexelt felteteleket
+  let finalResult;
+  if (indexedData.length === 0) {
+    finalResult = await client
+      .db(condition.dbName)
+      .collection(condition.collName)
+      .find()
+      .toArray();
+  } else {
+    finalResult = indexedData;
+  }
+  console.log("finalRes:", finalResult);
+
+  const pk = jsonData.metadata.PK;
+  const nonPkColumns = jsonData.column.filter(
+    (elem) => !pk.includes(elem.name)
+  );
+  for (let i = 0; i < nonIndexedConditions.length; i++) {
+    const cond = nonIndexedConditions[i];
+    const columnIndex = nonPkColumns.findIndex(
+      (col) => col.name === cond.column
+    );
+    if (columnIndex === -1) {
+      return {
+        success: false,
+        message: `Column ${cond.column} not found`,
+      };
+    }
+
+    finalResult = finalResult.filter(
+      (elem) => elem.value.split("#")[columnIndex] === cond.value
     );
   }
-  console.log("indexedData: ", indexedData);
-
-  //Now we intersect the non-indexed columns
-  for (let i = 1; i < nonIndexedConditions.length; i++) {}
   return {
     success: true,
-    result: result,
+    result: finalResult,
   };
 }

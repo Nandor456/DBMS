@@ -1,4 +1,3 @@
-
 import fs from "fs";
 import { getDatabasePath, getTablePath } from "../../utils/paths.js";
 import { MongoClient } from "mongodb";
@@ -75,6 +74,7 @@ export async function indexController(req, res) {
     console.log("Nem letezik az Adatbazis");
     return res.status(400).send("Az adatbazis nem letezik");
   }
+
   if (!tableData[dbName].some((value) => value === tableName)) {
     // table meg nem letezik
     return res.status(400).send("Meg nem letezik a tabla");

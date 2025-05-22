@@ -84,7 +84,6 @@ export async function whereSelection(condition) {
   }
   let indexedData = [];
 
-  // Now reduce based on operators (assumes only "AND" for now)
   if (resultSets.length !== 0) {
     let result = resultSets[0];
     for (let i = 1; i < resultSets.length; i++) {

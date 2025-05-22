@@ -43,7 +43,7 @@ export function checkSelect(dbName, tableName, selectedColumns) {
 
   const existingColumns = data.column.map((col) => col.name);
   //console.log("existingColumns: ", existingColumns);
-
+  existingColumns.push("*");
   const missing = selectedColumns.filter(
     (col) => !existingColumns.includes(col)
   );

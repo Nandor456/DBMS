@@ -1,7 +1,10 @@
 import fs from "fs";
 import { getIndexedFileName } from "./getIndexedFileName.js";
 import { getDBClient } from "../../server.js";
-import { convertOperator } from "../utils/convertOperator.js";
+import {
+  convertOperatorToMongoOperator,
+  convertOperator,
+} from "../utils/convertOperator.js";
 
 function intersectArrays(arr1, arr2) {
   const set2 = new Set(arr2);
@@ -57,7 +60,7 @@ export async function whereSelection(condition) {
 
     let mongoOperator;
     try {
-      mongoOperator = convertOperator(operator);
+      mongoOperator = convertOperatorToMongoOperator(operator);
     } catch (error) {
       return { success: false, message: error.message };
     }
@@ -71,17 +74,22 @@ export async function whereSelection(condition) {
           { $match: { idAsNumber: { [mongoOperator]: parsedValue } } },
         ]
       : [{ $match: { _id: { [mongoOperator]: parsedValue } } }];
+    console.log(condition.dbName);
+    console.log(indexedFileName);
 
     const data = await client
       .db(condition.dbName)
       .collection(indexedFileName)
       .aggregate(pipeline)
       .toArray();
+    console.log("data", data);
 
     const matched = data.map((doc) => doc.value.split("#")).flat();
 
     resultSets.push(matched);
   }
+  console.log("resultsets", resultSets);
+
   let indexedData = [];
 
   if (resultSets.length !== 0) {
@@ -97,6 +105,8 @@ export async function whereSelection(condition) {
         };
       }
     }
+    console.log("result", result);
+
     for (let i = 0; i < result.length; i++) {
       indexedData.push(
         await client
@@ -108,7 +118,6 @@ export async function whereSelection(condition) {
   }
   //indexelt oszlopok szerint kapott eredmeny
   console.log("indexedData: ", indexedData);
-  //TODO: berakni a pkt az indexed columnok koze
   //vesszuk a nem indexelt felteteleket
   let finalResult;
   if (indexedData.length === 0) {
@@ -128,19 +137,29 @@ export async function whereSelection(condition) {
   );
   for (let i = 0; i < nonIndexedConditions.length; i++) {
     const cond = nonIndexedConditions[i];
-    const columnIndex = nonPkColumns.findIndex(
-      (col) => col.name === cond.column
-    );
-    if (columnIndex === -1) {
-      return {
-        success: false,
-        message: `Column ${cond.column} not found`,
-      };
-    }
+    if (!jsonData.metadata.PK.includes(cond.column)) {
+      const columnIndex = nonPkColumns.findIndex(
+        (col) => col.name === cond.column
+      );
+      if (columnIndex === -1) {
+        return {
+          success: false,
+          message: `Column ${cond.column} not found`,
+        };
+      }
 
-    finalResult = finalResult.filter(
-      (elem) => elem.value.split("#")[columnIndex] === cond.value
-    );
+      finalResult = finalResult.filter((elem) =>
+        convertOperator(
+          elem.value.split("#")[columnIndex],
+          cond.operator,
+          cond.value
+        )
+      );
+    } else {
+      finalResult = finalResult.filter((elem) =>
+        convertOperator(elem._id, cond.operator, cond.value)
+      );
+    }
   }
   return {
     success: true,

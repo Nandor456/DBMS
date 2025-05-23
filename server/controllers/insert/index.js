@@ -150,6 +150,7 @@ async function createIndex(indexName, columns, tableName, dbName) {
     for (const [key, value] of Object.entries(finalValues)) {
       await collection.insertOne({ _id: key, value: value });
     }
+    console.log("Index created:", jsonData.metadata.indexedColumns);
     jsonData.metadata.indexedColumns.push({
       column: columns,
       name: initIndexName,

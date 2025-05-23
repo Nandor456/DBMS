@@ -89,6 +89,12 @@ function CollectionName({ onTableCreated }) {
         metadata: {
           ...prev.metadata,
           PK: updatedPKs,
+          indexedColumns: [
+            {
+              column: updatedPKs,
+              name: "initPK",
+            },
+          ],
         },
       };
     });
@@ -227,7 +233,7 @@ function CollectionName({ onTableCreated }) {
       setTableName("");
       window.dispatchEvent(new Event("newTable"));
       setColumns({
-        metadata: { PK: [], FK: [] },
+        metadata: { PK: [], FK: [], indexedColumns: [] },
         constraints: {},
         column: [{ name: "", type: "" }],
         inserted: {},

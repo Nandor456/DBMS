@@ -381,7 +381,6 @@ export async function insert(req, res) {
     handleindexes(key, finalValues, dbName, tableName);
     //console.log("index megoldva");
     await collection.insertOne({ _id: key, value: finalValues });
-    jsonData.metadata.indexedColumns.push(key);
     fs.writeFileSync(
       `test/${dbName}/${tableName}/column.json`,
       JSON.stringify(jsonData, null, 2)

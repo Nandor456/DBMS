@@ -12,11 +12,12 @@ router.post("/database/row/select", async (req, res) => {
   if (!whereData.success) {
     res.send(whereData.message);
   }
-
+  console.log("whereData", whereData);
   const selection = await whereSelection(whereData);
   if (!selection.success) {
     res.send(selection.message);
   }
+  console.log("selection", selection);
   const projection = getProjection(
     selection.result,
     whereData.dbName,

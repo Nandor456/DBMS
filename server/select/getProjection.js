@@ -7,19 +7,22 @@ export function getProjection(whereRes, dbName, collectionName) {
     fs.readFileSync(`test/${dbName}/${collectionName}/column.json`)
   );
   const columnDefs = jsonData.column;
-
-  for (let i = 0; i < whereRes.length; i++) {
-    let splitValues = whereRes[i].value.split("#");
-    let projectedRow = {};
-    const pk = jsonData.metadata.PK[0]; // assuming 1-column PK
-    const pkIndex = columnDefs.findIndex((col) => col.name === pk);
-    splitValues.splice(pkIndex, 0, whereRes[i]._id);
-    for (let j = 0; j < splitValues.length; j++) {
-      const col = columnDefs[j].name;
-      const value = splitValues[j];
-      projectedRow[col] = value;
+  console.log("whereRes:", whereRes);
+  if (whereRes) {
+    for (let i = 0; i < whereRes.length; i++) {
+      let splitValues = whereRes[i].value.split("#");
+      let projectedRow = {};
+      const pk = jsonData.metadata.PK[0]; // assuming 1-column PK
+      const pkIndex = columnDefs.findIndex((col) => col.name === pk);
+      splitValues.splice(pkIndex, 0, whereRes[i]._id);
+      for (let j = 0; j < splitValues.length; j++) {
+        const col = columnDefs[j].name;
+        const value = splitValues[j];
+        projectedRow[col] = value;
+      }
+      projectionRes.push(projectedRow);
     }
-    projectionRes.push(projectedRow);
+    return projectionRes;
   }
-  return projectionRes;
+  return [];
 }

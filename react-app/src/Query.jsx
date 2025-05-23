@@ -7,6 +7,7 @@ import { sql } from "@codemirror/lang-sql";
 import { autocompletion, completeFromList } from "@codemirror/autocomplete";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { useMemo } from "react";
+import DataTable from "./DataTable";
 
 function Query() {
   const [code, setCode] = useState("");
@@ -16,6 +17,7 @@ function Query() {
   const keywords = ["SELECT", "FROM", "INSERT", "DELETE", "UPDATE", "TABLE"];
   const [dynamics, setDynamics] = useState([]);
   const [dynamicColumns, setDynamicColumns] = useState([]);
+  const [queryResult, setQueryResult] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -77,7 +79,7 @@ function Query() {
     let method;
     try {
       method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase();
-      if (!["insert", "create", "delete"].includes(method))
+      if (!["insert", "create", "delete", "select"].includes(method))
         throw new Error("Invalid method");
       const method_type = method === "delete" ? "DELETE" : "POST";
       const response = await fetch(
@@ -88,8 +90,26 @@ function Query() {
           body: JSON.stringify(jsonData),
         }
       );
-      const text = await response.text();
-      if (!response.ok) throw new Error(text);
+      let text = "failed";
+
+      if (method === "select") {
+        const json = await response.json();
+        if (Array.isArray(json)) {
+          json.forEach((row) => {
+            console.log("Row:", row);
+          });
+          console.log("SELECT result:", json);
+          setQueryResult(json);
+        } else {
+          alert("SELECT did not return a valid array.");
+        }
+        text = "SELECT executed successfully";
+      } else {
+        text = await response.text();
+
+        if (!response.ok) throw new Error(text);
+      }
+
       alert("Success: " + text);
     } catch (e) {
       alert("Error: " + e.message);
@@ -154,6 +174,11 @@ function Query() {
           basicSetup={{ lineNumbers: true }}
         />
       </div>
+      {queryResult.length > 0 && (
+        <div style={{ marginTop: 20 }}>
+          <DataTable rows={queryResult} />
+        </div>
+      )}
     </div>
   );
 }

@@ -33,6 +33,7 @@ export function createDB(req, res) {
 //create table
 export function createTable(req, res) {
   const { database, table, columns } = req.body;
+  console.log("Columns---------------------:", columns);
   //nevek megvannak
   if (!database || !table || !columns) {
     console.log("Hiba a body-ban");

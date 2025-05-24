@@ -1,14 +1,21 @@
 import fs from "fs";
-import { getIndexedFileName } from "./getIndexedFileName.js";
 import { getDBClient } from "../../server.js";
-import {
-  convertOperatorToMongoOperator,
-  convertOperator,
-} from "../utils/convertOperator.js";
+import { convertOperator } from "../utils/convertOperator.js";
+import { getMatchedIdsFromSimpleIndex } from "./getMatchedDataFromSimpleIndex.js";
+import { findMatchingCompositeIndex } from "./findMatchingCompositeIndex.js";
+import { getMatchedIdsFromCompositeIndex } from "./getMatchedIdsFromCompositeIndex.js";
+import { isPartOfHandledComposite } from "./isPartOfHandledComposite.js";
 
 function intersectArrays(arr1, arr2) {
   const set2 = new Set(arr2);
   return arr1.filter((item) => set2.has(item));
+}
+
+function isSimpleIndex(columnName, indexedColumns) {
+  return indexedColumns.some(
+    (indexArr) =>
+      indexArr.column.length === 1 && indexArr.column[0] === columnName
+  );
 }
 
 export async function whereSelection(condition) {
@@ -20,72 +27,53 @@ export async function whereSelection(condition) {
     )
   );
   const indexedColumns = jsonData.metadata.indexedColumns;
-  const nonIndexedConditions = condition.conditions.filter((elem) => {
-    if (typeof elem !== "object") return false;
-
-    const isIndexed = indexedColumns.some(
-      (indexArr) =>
-        indexArr.column.length === 1 && indexArr.column[0] === elem.column
-    );
-
-    return !isIndexed;
-  });
-
-  console.log("non indexed", nonIndexedConditions);
-
   const resultSets = []; // Will hold arrays of IDs for indexed conditions
   const operators = []; // Will hold logical operators (e.g., "AND")
-
+  const handledCompositeColumns = [];
+  let nonIndexedConditions = [];
   for (const cond of condition.conditions) {
     if (typeof cond !== "object") {
       operators.push(cond); // e.g., 'AND'
       continue;
     }
+    console.log("cond", cond);
 
-    const columnName = cond.column;
-    const operator = cond.operator;
-    const value = cond.value;
-
-    const simpleIndex = indexedColumns.find(
-      (indexArr) =>
-        indexArr.column.length === 1 && indexArr.column[0] === columnName
+    if (isPartOfHandledComposite(cond.column, handledCompositeColumns)) {
+      console.log("already handled");
+      continue;
+    }
+    //checks whether all the columns of a composite index exist in the condition list
+    const composite = findMatchingCompositeIndex(
+      cond,
+      condition.conditions,
+      indexedColumns
     );
+    console.log("composite", composite);
 
-    if (!simpleIndex) continue;
-    const indexedFileName = getIndexedFileName(
-      jsonData,
-      columnName,
-      condition.collName
-    );
-
-    let mongoOperator;
-    try {
-      mongoOperator = convertOperatorToMongoOperator(operator);
-    } catch (error) {
-      return { success: false, message: error.message };
+    if (composite) {
+      const matched = await getMatchedIdsFromCompositeIndex(
+        composite,
+        condition,
+        jsonData,
+        client
+      );
+      resultSets.push(matched);
+      handledCompositeColumns.push(...composite.column);
+      continue;
     }
 
-    const isInequality = [">", "<", ">=", "<="].includes(operator);
-    const parsedValue = isInequality ? parseFloat(value) : value;
+    if (!isSimpleIndex(cond.column, indexedColumns)) {
+      console.log(`Skipping non-indexed column: ${cond.column}`);
+      nonIndexedConditions.push(cond);
+      continue;
+    }
 
-    const pipeline = isInequality
-      ? [
-          { $addFields: { idAsNumber: { $toDouble: "$_id" } } },
-          { $match: { idAsNumber: { [mongoOperator]: parsedValue } } },
-        ]
-      : [{ $match: { _id: { [mongoOperator]: parsedValue } } }];
-    console.log(condition.dbName);
-    console.log(indexedFileName);
-
-    const data = await client
-      .db(condition.dbName)
-      .collection(indexedFileName)
-      .aggregate(pipeline)
-      .toArray();
-    console.log("data", data);
-
-    const matched = data.map((doc) => doc.value.split("#")).flat();
-
+    const matched = await getMatchedIdsFromSimpleIndex(
+      cond,
+      condition,
+      jsonData,
+      client
+    );
     resultSets.push(matched);
   }
   console.log("resultsets", resultSets);

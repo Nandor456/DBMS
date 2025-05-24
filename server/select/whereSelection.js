@@ -22,7 +22,7 @@ export async function whereSelection(condition) {
   const indexedColumns = jsonData.metadata.indexedColumns;
   const nonIndexedConditions = condition.conditions.filter((elem) => {
     if (typeof elem !== "object") return false;
-    console.log("----------___",indexedColumns)
+
     const isIndexed = indexedColumns.some(
       (indexArr) =>
         indexArr.column.length === 1 && indexArr.column[0] === elem.column
@@ -135,7 +135,6 @@ export async function whereSelection(condition) {
   const nonPkColumns = jsonData.column.filter(
     (elem) => !pk.includes(elem.name)
   );
-  //console.log("nonPkColumns--------------------------------", nonPkColumns);
   for (let i = 0; i < nonIndexedConditions.length; i++) {
     const cond = nonIndexedConditions[i];
     if (!jsonData.metadata.PK.includes(cond.column)) {

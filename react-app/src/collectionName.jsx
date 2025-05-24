@@ -89,12 +89,6 @@ function CollectionName({ onTableCreated }) {
         metadata: {
           ...prev.metadata,
           PK: updatedPKs,
-          indexedColumns: [
-            {
-              column: updatedPKs,
-              name: "initPK",
-            },
-          ],
         },
       };
     });

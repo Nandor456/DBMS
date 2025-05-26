@@ -14,6 +14,7 @@ import CreateRouter from "./server/routes/create.js";
 import DatabaseRouter from "./server/routes/database.js";
 import DeleteRouter from "./server/routes/delete.js";
 import InsertRouter from "./server/routes/insert.js";
+import joinRouter from "./server/routes/join.js";
 import { getColumns } from "./server/utils/getDbData.js";
 import { fileURLToPath } from "url";
 
@@ -215,7 +216,6 @@ app.use("/database/old", DatabaseRouter);
 //   //console.log(json(jsonData.map(db => db.name)));
 //   res.json(jsonData);
 // });
-app.use("/database/old", DatabaseRouter);
 
 // function keyF(partNames, parts, tableName, dbName) {
 //   let jsonData = JSON.parse(
@@ -620,7 +620,6 @@ app.use("/database/old", DatabaseRouter);
 // insert
 app.use("/database/row/insert", InsertRouter);
 
-
 // const whichID = (condition, dbName, tableName) => {
 //   const valuesAnd = condition.split("AND");
 //   const idMap = {};
@@ -954,7 +953,7 @@ app.use("/database/row", DeleteRouter);
 // }
 
 app.use("/database/row", InsertRouter);
-
+app.use("/database/join", joinRouter);
 app.use((req, res, next) => {
   console.log(`Request to: ${req.url}`);
   next();

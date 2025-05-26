@@ -4,7 +4,6 @@ import {
   extractConditions,
   flattenConditions,
 } from "../utils/get.js";
-import { buildFilterFunction } from "../utils/whereHandle.js";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";

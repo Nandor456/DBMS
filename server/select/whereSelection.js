@@ -33,7 +33,7 @@ export async function whereSelection(condition) {
   let nonIndexedConditions = [];
   for (const cond of condition.conditions) {
     if (typeof cond !== "object") {
-      operators.push(cond); // e.g., 'AND'
+      //operators.push(cond); // e.g., 'AND'
       continue;
     }
     console.log("cond", cond);
@@ -83,15 +83,15 @@ export async function whereSelection(condition) {
   if (resultSets.length !== 0) {
     let result = resultSets[0];
     for (let i = 1; i < resultSets.length; i++) {
-      const op = operators[i - 1]; // logical operator between i-1 and i
-      if (op === "AND") {
-        result = intersectArrays(result, resultSets[i]);
-      } else {
-        return {
-          success: false,
-          message: `Unsupported logical operator "${op}"`,
-        };
-      }
+      //const op = operators[i - 1]; // logical operator between i-1 and i
+      //if (op === "AND") {
+      result = intersectArrays(result, resultSets[i]);
+      // } else {
+      //   return {
+      //     success: false,
+      //     message: `Unsupported logical operator "${op}"`,
+      //   };
+      // }
     }
     console.log("result", result);
 
@@ -117,8 +117,6 @@ export async function whereSelection(condition) {
   } else {
     finalResult = indexedData;
   }
-  console.log("finalRes:", finalResult);
-
   const pk = jsonData.metadata.PK;
   const nonPkColumns = jsonData.column.filter(
     (elem) => !pk.includes(elem.name)
@@ -148,6 +146,7 @@ export async function whereSelection(condition) {
         convertOperator(elem._id, cond.operator, cond.value)
       );
     }
+    console.log("finalRes:", finalResult);
   }
   return {
     success: true,

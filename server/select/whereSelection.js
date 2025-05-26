@@ -19,7 +19,19 @@ function isSimpleIndex(columnName, indexedColumns) {
 }
 
 export async function whereSelection(condition) {
+  console.log("condition", condition);
   const client = getDBClient();
+
+  if (condition.conditions.length === 0) {
+    return {
+      success: true,
+      result: await client
+        .db(condition.dbName)
+        .collection(condition.collName)
+        .find()
+        .toArray(),
+    };
+  }
 
   const jsonData = JSON.parse(
     fs.readFileSync(
@@ -28,7 +40,7 @@ export async function whereSelection(condition) {
   );
   const indexedColumns = jsonData.metadata.indexedColumns;
   const resultSets = []; // Will hold arrays of IDs for indexed conditions
-  const operators = []; // Will hold logical operators (e.g., "AND")
+  //const operators = []; // Will hold logical operators (e.g., "AND")
   const handledCompositeColumns = [];
   let nonIndexedConditions = [];
   for (const cond of condition.conditions) {

@@ -4,23 +4,28 @@ import { splitConditionsByTable } from "../../utils/splitConditionsByTable.js";
 import { simpleNestedLoopJoin } from "../../utils/indexedNestedLoop.js";
 export async function joinController(req, res) {
   const handledJoinInput = handleJoinInput(req.body);
-  console.log(handledJoinInput);
   const splitTables = splitConditionsByTable(handledJoinInput.where);
-  console.log(splitTables);
   const aliasToTable = {
     [handledJoinInput.from.alias]: handledJoinInput.from.table,
   };
   for (const joinObj of handledJoinInput.joins) {
     aliasToTable[joinObj.alias] = joinObj.table;
   }
+  console.log("handleJoinInput", handledJoinInput);
+  console.log("splitTables", splitTables);
+  const aliasOrder = [
+    handledJoinInput.from.alias,
+    ...handledJoinInput.joins.map((j) => j.alias),
+  ];
+  console.log("alias", aliasOrder);
 
-  const joinRes = []; // List of row arrays
-  for (const cond in splitTables) {
-    console.log(cond);
+  const joinRes = [];
+  for (const alias of aliasOrder) {
+    const conditions = splitTables[alias] || [];
     const whereInput = {
       dbName: handledJoinInput.use,
-      collName: aliasToTable[cond],
-      conditions: splitTables[cond],
+      collName: aliasToTable[alias],
+      conditions,
     };
 
     const whereData = await whereSelection(whereInput);
@@ -29,8 +34,7 @@ export async function joinController(req, res) {
     }
     joinRes.push(whereData.result);
   }
-  console.log(joinRes);
   const joinChain = handledJoinInput.joins.map((join) => join.on);
   const indexedNestedLoop = simpleNestedLoopJoin(joinRes, joinChain);
-  console.log(indexedNestedLoop);
+  console.log("nested:", indexedNestedLoop);
 }

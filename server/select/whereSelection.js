@@ -19,7 +19,7 @@ export async function whereSelection(condition) {
   const indexedColumns = jsonData.metadata.indexedColumns;
   const nonIndexedConditions = condition.conditions.filter((elem) => {
     if (typeof elem !== "object") return false;
-    console.log("----------___",indexedColumns)
+    //console.log("----------___",indexedColumns)
     const isIndexed = indexedColumns.some(
       (indexArr) =>
         indexArr.column.length === 1 && indexArr.column[0] === elem.column
@@ -31,7 +31,7 @@ export async function whereSelection(condition) {
   console.log("non indexed", nonIndexedConditions);
 
   const resultSets = []; // Will hold arrays of IDs for indexed conditions
-  const operators = []; // Will hold logical operators (e.g., "AND")
+  const operators = []; // Will hold logical operators
 
   for (const cond of condition.conditions) {
     if (typeof cond !== "object") {

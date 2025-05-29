@@ -5,17 +5,11 @@ import { getMatchedIdsFromSimpleIndex } from "./getMatchedDataFromSimpleIndex.js
 import { findMatchingCompositeIndex } from "./findMatchingCompositeIndex.js";
 import { getMatchedIdsFromCompositeIndex } from "./getMatchedIdsFromCompositeIndex.js";
 import { isPartOfHandledComposite } from "./isPartOfHandledComposite.js";
+import { isSimpleIndex } from "../utils/isSimpleIndex.js";
 
 function intersectArrays(arr1, arr2) {
   const set2 = new Set(arr2);
   return arr1.filter((item) => set2.has(item));
-}
-
-function isSimpleIndex(columnName, indexedColumns) {
-  return indexedColumns.some(
-    (indexArr) =>
-      indexArr.column.length === 1 && indexArr.column[0] === columnName
-  );
 }
 
 export async function whereSelection(condition) {

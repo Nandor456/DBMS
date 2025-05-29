@@ -187,7 +187,11 @@ async function unique(partNames, parts, tableName, dbName, collection, key) {
 
 //UJ Lab3-hoz Insert esetben indexek updateje
 async function handleindexes(pk, parts, dbName, tableName) {
-  //console.log("baj: ", parts);
+  console.log("baj: ", parts);
+  console.log("pk", pk);
+  console.log(dbName);
+  console.log(tableName);
+
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
   const filteredCollections = collections.filter(
@@ -202,7 +206,7 @@ async function handleindexes(pk, parts, dbName, tableName) {
     .filter((column) => !primaryKeys.includes(column.name)) // csak ami nem PK
     .map((column) => column.name);
   let cols = [];
-  for (filter of filteredCollections) {
+  for (const filter of filteredCollections) {
     let index = 3;
     let indexes = [];
     let element = " ";
@@ -242,7 +246,6 @@ async function handleindexes(pk, parts, dbName, tableName) {
         // Ha nem létezik, létrehozunk egy új dokumentumot
         await collection.insertOne({
           _id: final,
-          value: pk,
           value: pk,
         });
       }

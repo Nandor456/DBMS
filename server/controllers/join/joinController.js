@@ -1,7 +1,7 @@
 import { whereSelection } from "../../select/whereSelection.js";
 import { handleJoinInput } from "../../utils/handleJoinInput.js";
 import { splitConditionsByTable } from "../../utils/splitConditionsByTable.js";
-import { simpleNestedLoopJoin } from "../../utils/indexedNestedLoop.js";
+import { simpleNestedLoopJoin } from "./indexedNestedLoop.js";
 export async function joinController(req, res) {
   const handledJoinInput = handleJoinInput(req.body);
   const splitTables = splitConditionsByTable(handledJoinInput.where);
@@ -32,9 +32,14 @@ export async function joinController(req, res) {
     if (!whereData.success) {
       res.status(401).send("Error when using where");
     }
-    joinRes.push(whereData.result);
+    joinRes.push({
+      data: whereData.result,
+      dbName: handledJoinInput.use,
+      collName: aliasToTable[alias],
+    });
   }
   const joinChain = handledJoinInput.joins.map((join) => join.on);
-  const indexedNestedLoop = simpleNestedLoopJoin(joinRes, joinChain);
+  const indexedNestedLoop = await simpleNestedLoopJoin(joinRes, joinChain);
   console.log("nested:", indexedNestedLoop);
+  res.json(indexedNestedLoop);
 }

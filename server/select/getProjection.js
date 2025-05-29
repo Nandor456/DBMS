@@ -1,7 +1,5 @@
-import { getDBClient } from "../../server.js";
 import fs from "fs";
 export function getProjection(whereRes, dbName, collectionName) {
-  const client = getDBClient();
   let projectionRes = [];
   const jsonData = JSON.parse(
     fs.readFileSync(`test/${dbName}/${collectionName}/column.json`)

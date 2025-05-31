@@ -89,18 +89,17 @@ function CollectionName({ onTableCreated }) {
         metadata: {
           ...prev.metadata,
           PK: updatedPKs,
-          indexedColumns: [
-            {
-              column: updatedPKs,
-              name: "initPK",
-            },
-          ],
         },
       };
     });
   };
 
-  const handleColumnChangeMetadataFK = (columnName, tableName, value) => {
+  const handleColumnChangeMetadataFK = (
+    columnName,
+    tableName,
+    value,
+    columnRefName = ""
+  ) => {
     setColumns((prev) => {
       let updatedFKs = [...prev.metadata.FK];
 
@@ -108,19 +107,19 @@ function CollectionName({ onTableCreated }) {
         const exists = updatedFKs.some((fk) => fk.FKName === columnName);
 
         if (!exists) {
-          // Hozzáadás, ha még nincs benne
           updatedFKs.push({
             FKName: columnName,
             FKTableName: tableName,
+            FKColumnName: columnRefName,
           });
         } else {
-          // ✨ Frissítés, ha már van ilyen FKName
           updatedFKs = updatedFKs.map((fk) =>
-            fk.FKName === columnName ? { ...fk, FKTableName: tableName } : fk
+            fk.FKName === columnName
+              ? { ...fk, FKTableName: tableName, FKColumnName: columnRefName }
+              : fk
           );
         }
       } else {
-        // FK törlése
         updatedFKs = updatedFKs.filter((fk) => fk.FKName !== columnName);
       }
 
@@ -319,33 +318,61 @@ function CollectionName({ onTableCreated }) {
           </select>
 
           {columns.metadata.FK.some((fk) => fk.FKName === col.name) && (
-            <input
-              type="text"
-              placeholder="Referenced table name"
-              value={referencedTables[col.name] || ""}
-              onChange={(e) => {
-                const newTable = e.target.value;
+            <div>
+              <input
+                type="text"
+                placeholder="Referenced table name"
+                value={referencedTables[col.name]?.table || ""}
+                onChange={(e) => {
+                  const newTable = e.target.value;
 
-                // Frissítjük az input állapotát
-                setReferencedTables((prev) => ({
-                  ...prev,
-                  [col.name]: newTable,
-                }));
+                  // Frissítjük az input állapotát
+                  setReferencedTables((prev) => ({
+                    ...prev,
+                    [col.name]: {
+                      table: newTable,
+                      column: prev[col.name]?.column || "",
+                    },
+                  }));
 
-                // Ellenőrizzük, hogy az adott oszlop valóban FK-ra van állítva
-                const isFK = columns.metadata.FK.some(
-                  (fk) => fk.FKName === col.name
-                );
+                  // Ellenőrizzük, hogy az adott oszlop valóban FK-ra van állítva
+                  const isFK = columns.metadata.FK.some(
+                    (fk) => fk.FKName === col.name
+                  );
 
-                // Ha még nincs bent az FK listában, hozzáadjuk
-                if (!isFK) {
-                  handleColumnChangeMetadataFK(col.name, newTable, "FK");
-                } else {
-                  // Ha már bent van, csak frissítjük a táblát
-                  handleColumnChangeMetadataFK(col.name, newTable, "FK");
-                }
-              }}
-            />
+                  // Ha még nincs bent az FK listában, hozzáadjuk
+                  if (!isFK) {
+                    handleColumnChangeMetadataFK(col.name, newTable, "FK");
+                  } else {
+                    // Ha már bent van, csak frissítjük a táblát
+                    handleColumnChangeMetadataFK(col.name, newTable, "FK");
+                  }
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Referenced column name"
+                value={referencedTables[col.name]?.column || ""}
+                onChange={(e) => {
+                  const newColumn = e.target.value;
+
+                  setReferencedTables((prev) => ({
+                    ...prev,
+                    [col.name]: {
+                      table: prev[col.name]?.table || "",
+                      column: newColumn,
+                    },
+                  }));
+
+                  handleColumnChangeMetadataFK(
+                    col.name,
+                    referencedTables[col.name]?.table || "",
+                    "FK",
+                    newColumn
+                  );
+                }}
+              />
+            </div>
           )}
           <select
             value={

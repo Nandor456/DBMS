@@ -1,7 +1,11 @@
 import fs from "fs";
-import { getIndexedFileName } from "./getIndexedFileName.js";
 import { getDBClient } from "../../server.js";
 import { convertOperator } from "../utils/convertOperator.js";
+import { getMatchedIdsFromSimpleIndex } from "./getMatchedDataFromSimpleIndex.js";
+import { findMatchingCompositeIndex } from "./findMatchingCompositeIndex.js";
+import { getMatchedIdsFromCompositeIndex } from "./getMatchedIdsFromCompositeIndex.js";
+import { isPartOfHandledComposite } from "./isPartOfHandledComposite.js";
+import { isSimpleIndex } from "../utils/isSimpleIndex.js";
 
 function intersectArrays(arr1, arr2) {
   const set2 = new Set(arr2);
@@ -9,7 +13,19 @@ function intersectArrays(arr1, arr2) {
 }
 
 export async function whereSelection(condition) {
+  console.log("condition", condition);
   const client = getDBClient();
+
+  if (condition.conditions.length === 0) {
+    return {
+      success: true,
+      result: await client
+        .db(condition.dbName)
+        .collection(condition.collName)
+        .find()
+        .toArray(),
+    };
+  }
 
   const jsonData = JSON.parse(
     fs.readFileSync(
@@ -17,86 +33,74 @@ export async function whereSelection(condition) {
     )
   );
   const indexedColumns = jsonData.metadata.indexedColumns;
-  const nonIndexedConditions = condition.conditions.filter((elem) => {
-    if (typeof elem !== "object") return false;
-    //console.log("----------___",indexedColumns)
-    const isIndexed = indexedColumns.some(
-      (indexArr) =>
-        indexArr.column.length === 1 && indexArr.column[0] === elem.column
-    );
-
-    return !isIndexed;
-  });
-
-  console.log("non indexed", nonIndexedConditions);
-
   const resultSets = []; // Will hold arrays of IDs for indexed conditions
-  const operators = []; // Will hold logical operators
-
+  //const operators = []; // Will hold logical operators (e.g., "AND")
+  const handledCompositeColumns = [];
+  let nonIndexedConditions = [];
   for (const cond of condition.conditions) {
     if (typeof cond !== "object") {
-      operators.push(cond); // e.g., 'AND'
+      //operators.push(cond); // e.g., 'AND'
+      continue;
+    }
+    console.log("cond", cond);
+
+    if (isPartOfHandledComposite(cond.column, handledCompositeColumns)) {
+      console.log("already handled");
+      continue;
+    }
+    //checks whether all the columns of a composite index exist in the condition list
+    const composite = findMatchingCompositeIndex(
+      cond,
+      condition.conditions,
+      indexedColumns
+    );
+    console.log("composite", composite);
+
+    if (composite) {
+      const matched = await getMatchedIdsFromCompositeIndex(
+        composite,
+        condition,
+        jsonData,
+        client
+      );
+      resultSets.push(matched);
+      handledCompositeColumns.push(...composite.column);
       continue;
     }
 
-    const columnName = cond.column;
-    const operator = cond.operator;
-    const value = cond.value;
-
-    const simpleIndex = indexedColumns.find(
-      (indexArr) =>
-        indexArr.column.length === 1 && indexArr.column[0] === columnName
-    );
-
-    if (!simpleIndex) continue;
-    const indexedFileName = getIndexedFileName(
-      jsonData,
-      columnName,
-      condition.collName
-    );
-
-    let mongoOperator;
-    try {
-      mongoOperator = convertOperator(operator);
-    } catch (error) {
-      return { success: false, message: error.message };
+    if (!isSimpleIndex(cond.column, indexedColumns)) {
+      console.log(`Skipping non-indexed column: ${cond.column}`);
+      nonIndexedConditions.push(cond);
+      continue;
     }
 
-    const isInequality = [">", "<", ">=", "<="].includes(operator);
-    const parsedValue = isInequality ? parseFloat(value) : value;
-
-    const pipeline = isInequality
-      ? [
-          { $addFields: { idAsNumber: { $toDouble: "$_id" } } },
-          { $match: { idAsNumber: { [mongoOperator]: parsedValue } } },
-        ]
-      : [{ $match: { _id: { [mongoOperator]: parsedValue } } }];
-
-    const data = await client
-      .db(condition.dbName)
-      .collection(indexedFileName)
-      .aggregate(pipeline)
-      .toArray();
-
-    const matched = data.map((doc) => doc.value.split("#")).flat();
-
+    const matched = await getMatchedIdsFromSimpleIndex(
+      cond,
+      condition,
+      jsonData,
+      client
+    );
     resultSets.push(matched);
   }
+  console.log("resultsets", resultSets);
+
   let indexedData = [];
 
   if (resultSets.length !== 0) {
     let result = resultSets[0];
     for (let i = 1; i < resultSets.length; i++) {
-      const op = operators[i - 1]; // logical operator between i-1 and i
-      if (op === "AND") {
-        result = intersectArrays(result, resultSets[i]);
-      } else {
-        return {
-          success: false,
-          message: `Unsupported logical operator "${op}"`,
-        };
-      }
+      //const op = operators[i - 1]; // logical operator between i-1 and i
+      //if (op === "AND") {
+      result = intersectArrays(result, resultSets[i]);
+      // } else {
+      //   return {
+      //     success: false,
+      //     message: `Unsupported logical operator "${op}"`,
+      //   };
+      // }
     }
+    console.log("result", result);
+
     for (let i = 0; i < result.length; i++) {
       indexedData.push(
         await client
@@ -108,7 +112,6 @@ export async function whereSelection(condition) {
   }
   //indexelt oszlopok szerint kapott eredmeny
   console.log("indexedData: ", indexedData);
-  //TODO: berakni a pkt az indexed columnok koze
   //vesszuk a nem indexelt felteteleket
   let finalResult;
   if (indexedData.length === 0) {
@@ -120,28 +123,36 @@ export async function whereSelection(condition) {
   } else {
     finalResult = indexedData;
   }
-  console.log("finalRes:", finalResult);
-
   const pk = jsonData.metadata.PK;
   const nonPkColumns = jsonData.column.filter(
     (elem) => !pk.includes(elem.name)
   );
-  //console.log("nonPkColumns--------------------------------", nonPkColumns);
   for (let i = 0; i < nonIndexedConditions.length; i++) {
     const cond = nonIndexedConditions[i];
-    const columnIndex = nonPkColumns.findIndex(
-      (col) => col.name === cond.column
-    );
-    if (columnIndex === -1) {
-      return {
-        success: false,
-        message: `Column ${cond.column} not found`,
-      };
-    }
+    if (!jsonData.metadata.PK.includes(cond.column)) {
+      const columnIndex = nonPkColumns.findIndex(
+        (col) => col.name === cond.column
+      );
+      if (columnIndex === -1) {
+        return {
+          success: false,
+          message: `Column ${cond.column} not found`,
+        };
+      }
 
-    finalResult = finalResult.filter(
-      (elem) => elem.value.split("#")[columnIndex] === cond.value
-    );
+      finalResult = finalResult.filter((elem) =>
+        convertOperator(
+          elem.value.split("#")[columnIndex],
+          cond.operator,
+          cond.value
+        )
+      );
+    } else {
+      finalResult = finalResult.filter((elem) =>
+        convertOperator(elem._id, cond.operator, cond.value)
+      );
+    }
+    console.log("finalRes:", finalResult);
   }
   return {
     success: true,

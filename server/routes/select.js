@@ -17,12 +17,15 @@ router.post("/database/row/select", async (req, res) => {
   if (!selection.success) {
     res.send(selection.message);
   }
-  console.log("selection", selection);
+  console.log("selection:", selection);
+
   const projection = getProjection(
     selection.result,
     whereData.dbName,
     whereData.collName
   );
+  console.log("projection:", projection);
+
   let filteredProjection;
   const columsToProject = getColumnsToProject(req.body);
   if (columsToProject[0] !== "*") {

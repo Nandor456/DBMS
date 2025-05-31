@@ -7,7 +7,9 @@ export function getIndexedFileName(metadata, columnName, collectionName) {
   const indexPos = nonPkColumns.findIndex((c) => c === columnName);
 
   const indexName = metadata.metadata.indexedColumns.find(
-    (c) => (c.column = columnName)
+    (c) => c.column[0] === columnName
   );
+  console.log("indexname", indexName);
+
   return `${indexName.name}ᛥ${collectionName}ᛥindexesᛥ${indexPos}`;
 }

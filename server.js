@@ -1,12 +1,12 @@
 //JAvitani:   - touppercase az insertnel kivenni a partnamenel
 //            - az insertnel a partname-ek beolvasnanl ossze vissza irodhatnak es nem veszi eszre (tehat ha egy oszlop nev asd akkor mas oszlopnak is azt adjuk meg hogy asd, akkor azt fogja hinni a kod hogy jo es hibak lesznek ott, ezt meg atnezni)
-//            - fk ellenorzes letrehozasnal
-//            - pk nelkul ne lehessen letrehozni tablat
+//            - delete - index
+//           - delete - nem torli a mongobol a sorokat, ha a db-t torlom
+//           - fronton mindenre succes valaszt ir ki az alert ha nem jo is 
 
 import express from "express";
 import cors from "cors";
 import fs from "fs";
-import path from "path";
 import { dirname } from "path";
 import { MongoClient } from "mongodb";
 import SelectRouter from "./server/routes/select.js";
@@ -14,6 +14,7 @@ import CreateRouter from "./server/routes/create.js";
 import DatabaseRouter from "./server/routes/database.js";
 import DeleteRouter from "./server/routes/delete.js";
 import InsertRouter from "./server/routes/insert.js";
+import joinRouter from "./server/routes/join.js";
 import { getColumns } from "./server/utils/getDbData.js";
 import { fileURLToPath } from "url";
 
@@ -21,7 +22,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const uri = "mongodb://localhost:27017/";
 const client = new MongoClient(uri);
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 app.use(cors());
 const dbFile = "databases.json";
 const folder = "test";
@@ -215,7 +217,6 @@ app.use("/database/old", DatabaseRouter);
 //   //console.log(json(jsonData.map(db => db.name)));
 //   res.json(jsonData);
 // });
-app.use("/database/old", DatabaseRouter);
 
 // function keyF(partNames, parts, tableName, dbName) {
 //   let jsonData = JSON.parse(
@@ -620,7 +621,6 @@ app.use("/database/old", DatabaseRouter);
 // insert
 app.use("/database/row/insert", InsertRouter);
 
-
 // const whichID = (condition, dbName, tableName) => {
 //   const valuesAnd = condition.split("AND");
 //   const idMap = {};
@@ -954,7 +954,7 @@ app.use("/database/row", DeleteRouter);
 // }
 
 app.use("/database/row", InsertRouter);
-
+app.use("/database/row", joinRouter);
 app.use((req, res, next) => {
   console.log(`Request to: ${req.url}`);
   next();

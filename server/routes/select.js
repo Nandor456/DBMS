@@ -6,7 +6,7 @@ import { getColumnsToProject } from "../select/getColumnsToProject.js";
 import { handleJoinInput } from "../utils/handleJoinInput.js";
 import { joinController } from "../controllers/join/joinController.js";
 import { handleGroupBy } from "../utils/handleGroupBy.js";
-import {handleGroupByWithoutJoin} from "../utils/handleGroupByWithoutJoin.js";
+import { handleGroupByWithoutJoin } from "../utils/handleGroupByWithoutJoin.js";
 
 const router = express.Router();
 console.log("SelectRouter loaded");
@@ -14,11 +14,7 @@ console.log("SelectRouter loaded");
 router.post("/database/row/select", async (req, res) => {
   const { query } = req.body;
   const handledJoinInput = handleJoinInput(req.body);
-<<<<<<< HEAD
   //console.log("handledJoinInput:", handledJoinInput);
-=======
-  console.log("handledJoinInput:", handledJoinInput);
->>>>>>> cf4876740d8fb69b63667dbec1c312d6b1100dc1
   if (handledJoinInput?.groupBy === false) {
     //console.log("handledJoinInput.groupBy:", handledJoinInput.groupBy);
     return res.status(400).json({
@@ -38,7 +34,7 @@ router.post("/database/row/select", async (req, res) => {
     return await joinController(handledJoinInput, req, res);
   }
   let groupBy = true;
-  if (handledJoinInput.groupBy.length === 0){
+  if (handledJoinInput.groupBy.length === 0) {
     groupBy = false;
   }
   const whereData = getConditions(req.body, groupBy);

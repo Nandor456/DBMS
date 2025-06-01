@@ -8,6 +8,7 @@ const router = express.Router();
 console.log("SelectRouter loaded");
 
 router.post("/database/row/select", async (req, res) => {
+  
   const whereData = getConditions(req.body);
   if (!whereData.success) {
     res.send(whereData.message);

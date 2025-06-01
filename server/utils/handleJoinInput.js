@@ -89,6 +89,21 @@ export function handleJoinInput(elem) {
     }
   }
 
+  const groupByMatch = /group\s+by\s+(.+?)(?:\s+order\s+by|\s+limit|;|$)/i.exec(
+    cleaned
+  );
+
+  const groupByIndex = cleaned.toLowerCase().indexOf("group by");
+  const whereIndex = cleaned.toLowerCase().indexOf("where");
+
+  if (groupByIndex !== -1 && whereIndex !== -1 && groupByIndex < whereIndex) {
+    return {
+      success: false,
+      message: "GROUP BY must appear after WHERE clause",
+      errorAt: "group by",
+    };
+  }
+
   const parts = {
     success: true,
     use: useMatch[1],
@@ -99,6 +114,9 @@ export function handleJoinInput(elem) {
     },
     joins,
     where,
+    groupBy: groupByMatch
+      ? groupByMatch[1].split(",").map((s) => s.trim())
+      : [],
   };
 
   return parts;

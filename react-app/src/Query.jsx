@@ -109,10 +109,10 @@ function Query() {
           });
           console.log("SELECT result:", json);
           setQueryResult(json);
+          text = "SELECT executed successfully";
         } else {
-          alert("SELECT did not return a valid array.");
+          text = "SELECT did not return a valid array.";
         }
-        text = "SELECT executed successfully";
       } else {
         text = await response.text();
 

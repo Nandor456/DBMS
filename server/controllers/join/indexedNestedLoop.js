@@ -1,6 +1,15 @@
 import { getProjection } from "../../select/getProjection.js";
 import { isSimpleIndex } from "../../utils/isSimpleIndex.js";
 import { getJsonData } from "../../utils/getJsonData.js";
+// import { getIndexedData } from "./getIndexedData.js";
+
+function prefixObjectKeys(obj, alias) {
+  const newObj = {};
+  for (const key in obj) {
+    newObj[`${alias}.${key}`] = obj[key];
+  }
+  return newObj;
+}
 
 export async function simpleNestedLoopJoin(tables, joinConditions) {
   console.log("tables", tables);
@@ -51,12 +60,18 @@ export async function simpleNestedLoopJoin(tables, joinConditions) {
         console.log(matchingInnerRows);
 
         for (const innerRow of matchingInnerRows) {
-          newResult.push({ ...outerRow, ...innerRow });
+          newResult.push({
+            ...prefixObjectKeys(outerRow, tables[i - 1].collName),
+            ...prefixObjectKeys(innerRow, currentTable.collName),
+          });
         }
       }
       for (const innerRow of dataB) {
         if (outerRow[leftField] === innerRow[rightField]) {
-          newResult.push({ ...outerRow, ...innerRow });
+          newResult.push({
+            ...prefixObjectKeys(outerRow, tables[i - 1].collName),
+            ...prefixObjectKeys(innerRow, currentTable.collName),
+          });
         }
       }
     }

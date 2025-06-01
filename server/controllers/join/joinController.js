@@ -1,10 +1,37 @@
 import { whereSelection } from "../../select/whereSelection.js";
 import { handleJoinInput } from "../../utils/handleJoinInput.js";
-import { splitConditionsByTable } from "../../utils/splitConditionsByTable.js";
+import {
+  splitConditionsByTable,
+  splitGroupByTable,
+} from "../../utils/splitConditionsByTable.js";
 import { simpleNestedLoopJoin } from "./indexedNestedLoop.js";
+import { handleGroupBy } from "../../utils/handleGroupBy.js";
+
 export async function joinController(req, res) {
   const handledJoinInput = handleJoinInput(req.body);
+  if (!handledJoinInput.success) {
+    return res.status(400).json({
+      success: false,
+      message: handledJoinInput.message,
+      errorAt: handledJoinInput.errorAt,
+    });
+  }
+
   const splitTables = splitConditionsByTable(handledJoinInput.where);
+  const splitGroupBy = splitGroupByTable(
+    handledJoinInput.groupBy,
+    handledJoinInput.success,
+    handledJoinInput.from.table
+  );
+  console.log("splitFgroupby:", splitGroupBy);
+  if (splitGroupBy === -1) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid GROUP BY clause",
+      errorAt: "groupBy",
+    });
+  }
+
   const aliasToTable = {
     [handledJoinInput.from.alias]: handledJoinInput.from.table,
   };
@@ -32,6 +59,7 @@ export async function joinController(req, res) {
     if (!whereData.success) {
       res.status(401).send("Error when using where");
     }
+    console.log("whereData:", whereData);
     joinRes.push({
       data: whereData.result,
       dbName: handledJoinInput.use,
@@ -41,5 +69,24 @@ export async function joinController(req, res) {
   const joinChain = handledJoinInput.joins.map((join) => join.on);
   const indexedNestedLoop = await simpleNestedLoopJoin(joinRes, joinChain);
   console.log("nested:", indexedNestedLoop);
-  res.json(indexedNestedLoop);
+  console.log("splitGroupBy:", Object.keys(splitGroupBy).length);
+  if (Object.keys(splitGroupBy).length !== 0) {
+    const groupedData = handleGroupBy(
+      indexedNestedLoop,
+      splitGroupBy,
+      aliasToTable,
+      handledJoinInput.success,
+      handledJoinInput.select
+    );
+    if (groupedData === -1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid GROUP BY clause",
+        errorAt: "groupBy",
+      });
+    }
+    res.json(groupedData);
+  } else {
+    res.json(indexedNestedLoop);
+  }
 }

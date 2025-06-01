@@ -80,7 +80,8 @@ export function parseInsert(query, dbName) {
     console.log("Invalid column names");
     return { status: 0, message };
   }
-  const where = query.split(";")[2].trimStart();
+  const parts = query.split(";");
+  const where = parts.length > 2 ? parts[2].trimStart() : "";
   console.log("where: ", where);
   console.log("itt");
   return {

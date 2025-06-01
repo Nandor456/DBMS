@@ -22,7 +22,7 @@ export function getConditions(elem) {
   try {
     const { query } = elem;
     let { elements, dbName } = parseRows(query);
-    console.log("elements: ", elements, dbName);
+    console.log("elements: ", elements);
     if (!elements) {
       return {
         success: false,
@@ -42,23 +42,31 @@ export function getConditions(elem) {
         message: message,
       };
     }
-    let {
-      status: statusWhere,
-      message: messageWhere,
-      result,
-    } = parseWhere(whereStatemant, dbName, tableName);
-    if (statusWhere === 0) {
-      return {
-        success: false,
+    let flatConditions = [];
+    let result = null;
+    if (whereStatemant?.trim()) {
+      let {
+        status: statusWhere,
         message: messageWhere,
-      };
+        result,
+      } = parseWhere(whereStatemant, dbName, tableName);
+
+      if (statusWhere === 0) {
+        return {
+          success: false,
+          message: messageWhere,
+        };
+      }
+      result = whereResult;
     }
-    const columns = extractColumns(result.conditions);
-    console.log("result: ", columns);
-    const conditions = extractConditions(result.conditions);
-    console.log("conditions: ", conditions);
-    const flatConditions = flattenConditions(result);
-    console.log("conditionsWithOperator: ", flatConditions);
+    if (result) {
+      const columns = extractColumns(result.conditions);
+      console.log("result: ", columns);
+      const conditions = extractConditions(result.conditions);
+      console.log("conditions: ", conditions);
+      flatConditions = flattenConditions(result);
+      console.log("conditionsWithOperator: ", flatConditions);
+    }
 
     const jsonPath = path.resolve(
       __dirname,

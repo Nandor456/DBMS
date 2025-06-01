@@ -12,7 +12,7 @@ console.log("SelectRouter loaded");
 router.post("/database/row/select", async (req, res) => {
   const handledJoinInput = handleJoinInput(req.body);
   //console.log("handledJoinInput:", handledJoinInput);
-  if (handledJoinInput?.groupBy === false){
+  if (handledJoinInput?.groupBy === false) {
     //console.log("handledJoinInput.groupBy:", handledJoinInput.groupBy);
     return res.status(400).json({
       success: false,
@@ -35,7 +35,6 @@ router.post("/database/row/select", async (req, res) => {
   if (!whereData.success) {
     res.send(whereData.message);
   }
-  console.log("whereData", whereData);
   const selection = await whereSelection(whereData);
   if (!selection.success) {
     res.send(selection.message);

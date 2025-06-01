@@ -5,7 +5,6 @@ import { getProjection } from "../select/getProjection.js";
 import { getColumnsToProject } from "../select/getColumnsToProject.js";
 import { handleJoinInput } from "../utils/handleJoinInput.js";
 import { joinController } from "../controllers/join/joinController.js";
-import { handleGroupBy } from "../utils/handleGroupBy.js";
 import {handleGroupByWithoutJoin} from "../utils/handleGroupByWithoutJoin.js";
 
 const router = express.Router();

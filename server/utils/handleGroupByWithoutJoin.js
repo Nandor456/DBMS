@@ -1,29 +1,23 @@
-export function handleGroupBy(data, groupBy, aliasToTable, join, select) {
+export function handleGroupByWithoutJoin(data, groupBy, select) {
   console.log("handleGroupBy", data, groupBy);
-  console.log("aliasToTable", aliasToTable);
-  console.log("join", join);
   console.log("select", select);
 
   const groupedData = {};
 
-  if (join) {
-    for (const row of data) {
-      let groupKey = "";
-      for (const alias in groupBy) {
-        const columns = groupBy[alias];
-        for (const column of columns) {
-          const columnName = `${aliasToTable[alias]}.${column}`;
-          groupKey += row[columnName];
-        }
-      }
-      if (!groupedData[groupKey]) {
-        groupedData[groupKey] = [];
-      }
-      groupedData[groupKey].push(row);
+  for (const row of data) {
+    let groupKey = "";
+
+    for (const column of groupBy) {
+      groupKey += row[column];
     }
+
+    if (!groupedData[groupKey]) {
+      groupedData[groupKey] = [];
+    }
+    groupedData[groupKey].push(row);
   }
 
-  let resp = [];
+  const resp = [];
 
   for (const key of Object.keys(groupedData)) {
     const build = {};
@@ -32,29 +26,29 @@ export function handleGroupBy(data, groupBy, aliasToTable, join, select) {
     for (const selectEl of select) {
       const upper = selectEl.toUpperCase();
 
-      // --- Aggregált oszlopok (COUNT, SUM, AVG, MIN, MAX)
       if (selectEl.includes("(")) {
-        // handle alias: e.g. SUM(m.price) AS total
         let [funcExpr, aliasName] = selectEl.split(/ +as +/i);
         aliasName = aliasName?.trim() ?? funcExpr;
 
         const match = funcExpr.match(/(COUNT|SUM|AVG|MIN|MAX)\(([^)]+)\)/i);
         if (!match) {
-          return -1; // nem támogatott vagy szintaktikailag hibás
+          console.error(`Invalid aggregation expression: ${funcExpr}`);
+          return -1;
         }
 
         const func = match[1].toUpperCase();
         const field = match[2].trim();
-        const [alias, col] = field.split(".");
-        const keyName = `${aliasToTable[alias]}.${col}`;
 
-        
+        if (func === "COUNT" && field === "*") {
+          build[aliasName] = rows.length;
+          continue;
+        }
 
-        const rawValues = rows.map((row) => row[keyName]);
+        const rawValues = rows.map((row) => row[field]);
         const numericValues = rawValues
           .map((v) => Number(v))
           .filter((v) => !isNaN(v));
-
+        console.log("numericValues:", numericValues);
         if (func !== "COUNT" && numericValues.length !== rows.length) {
           console.error(`Non-numeric value in ${func}(${field})`);
           return -1;
@@ -77,16 +71,10 @@ export function handleGroupBy(data, groupBy, aliasToTable, join, select) {
           case "MAX":
             build[aliasName] = Math.max(...numericValues);
             break;
-          default:
-            return -1; // ismeretlen aggregáció
         }
       } else {
-        // --- Sima oszlop (pl. e.name)
-        const [alias, column] = selectEl.split(".");
-        const keyName = `${aliasToTable[alias]}.${column}`;
-
-        if (groupBy[alias] && groupBy[alias].includes(column)) {
-          build[selectEl] = rows[0][keyName]; // group by mezőt az első sorból vesszük
+        if (groupBy.includes(selectEl)) {
+          build[selectEl] = rows[0][selectEl];
         } else {
           console.error(`Non-grouped column ${selectEl} without aggregation`);
           return -1;

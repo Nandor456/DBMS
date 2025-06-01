@@ -128,6 +128,7 @@ export async function whereSelection(condition) {
   const nonPkColumns = jsonData.column.filter(
     (elem) => !pk.includes(elem.name)
   );
+
   for (let i = 0; i < nonIndexedConditions.length; i++) {
     const cond = nonIndexedConditions[i];
     if (!jsonData.metadata.PK.includes(cond.column)) {

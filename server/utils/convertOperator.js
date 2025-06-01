@@ -25,13 +25,13 @@ export function convertOperator(a, operator, b) {
     case "!=":
       return a != b;
     case ">":
-      return a > b;
+      return Number(a) > Number(b);
     case "<":
-      return a < b;
+      return Number(a) < Number(b);
     case ">=":
-      return a >= b;
+      return Number(a) >= Number(b);
     case "<=":
-      return a <= b;
+      return Number(a) <= Number(b);
     default:
       throw new Error(`Unsupported operator: ${operator}`);
   }

@@ -81,6 +81,7 @@ export async function whereSelection(condition) {
       client
     );
     resultSets.push(matched);
+    console.log(resultSets);
   }
   console.log("resultsets", resultSets);
 

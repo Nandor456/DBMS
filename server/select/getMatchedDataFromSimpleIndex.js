@@ -25,7 +25,7 @@ export async function getMatchedIdsFromSimpleIndex(
 
   const isInequality = [">", "<", ">=", "<="].includes(operator);
   const parsedValue = isInequality ? parseFloat(value) : value;
-  console.log(parsedValue);
+  console.log("parsed value", parsedValue);
 
   const pipeline = isInequality
     ? [

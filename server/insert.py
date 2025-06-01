@@ -1,13 +1,17 @@
 import requests
-
-#url = 'http://localhost:4000/database/row/insert'
+from faker import Faker
+import random
+fake = Faker()
+def generate_name():
+    return fake.name()
+def generate_number():
+    return random.randint(17, 35)
 url = 'http://localhost:4000/database/row/insert'
-names = ['John', 'Mike', 'Claudia', 'Wilson', 'Kevin', 'Potter']
-ages = ['21', '23', '19', '18', '21', '21']
-for id in range(6):
+for id in range(25):
     data = {
-        'query': f"Use school;\ninsert into student('id', 'name', 'age') values({id}, {names[id]}, {ages[id]});"
+        'query': f"Use school;\ninsert into student('id', 'name', 'age') values({id}, {generate_name()}, {generate_number()});"
     }
+
     id = id + 1
     response = requests.post(url, json=data)
     

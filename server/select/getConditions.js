@@ -7,6 +7,7 @@ import {
 import fs from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
+import { group } from "console";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,7 @@ const tableFile = path.resolve(__dirname, "../../table.json");
 //    "query": "\n\nUse aaa;\n\nSelect aa, rrr; \n\n From a; \n\n Where rrr < '2003-03-03' AND ss<= 3 "
 // }
 
-export function getConditions(elem) {
+export function getConditions(elem, groupBy) {
   console.log("getSelect loaded");
   try {
     const { query } = elem;
@@ -35,7 +36,7 @@ export function getConditions(elem) {
       elements: elementsArray,
       tableName,
       whereStatemant,
-    } = parseInsert(elements, dbName);
+    } = parseInsert(elements, dbName, groupBy);
     if (status === 0) {
       return {
         success: false,
@@ -46,7 +47,7 @@ export function getConditions(elem) {
       status: statusWhere,
       message: messageWhere,
       result,
-    } = parseWhere(whereStatemant, dbName, tableName);
+    } = parseWhere(whereStatemant, dbName, tableName, groupBy);
     if (statusWhere === 0) {
       return {
         success: false,

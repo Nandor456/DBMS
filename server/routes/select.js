@@ -5,14 +5,17 @@ import { getProjection } from "../select/getProjection.js";
 import { getColumnsToProject } from "../select/getColumnsToProject.js";
 import { handleJoinInput } from "../utils/handleJoinInput.js";
 import { joinController } from "../controllers/join/joinController.js";
+import { handleGroupBy } from "../utils/handleGroupBy.js";
+import {handleGroupByWithoutJoin} from "../utils/handleGroupByWithoutJoin.js";
 
 const router = express.Router();
 console.log("SelectRouter loaded");
 
 router.post("/database/row/select", async (req, res) => {
+  const { query } = req.body;
   const handledJoinInput = handleJoinInput(req.body);
-  //console.log("handledJoinInput:", handledJoinInput);
-  if (handledJoinInput?.groupBy === false){
+  console.log("handledJoinInput:", handledJoinInput);
+  if (handledJoinInput?.groupBy === false) {
     //console.log("handledJoinInput.groupBy:", handledJoinInput.groupBy);
     return res.status(400).json({
       success: false,
@@ -30,7 +33,11 @@ router.post("/database/row/select", async (req, res) => {
     }
     return await joinController(handledJoinInput, req, res);
   }
-  const whereData = getConditions(req.body);
+  let groupBy = true;
+  if (handledJoinInput.groupBy.length === 0){
+    groupBy = false;
+  }
+  const whereData = getConditions(req.body, groupBy);
   console.log("whereData:", whereData);
   if (!whereData.success) {
     res.send(whereData.message);
@@ -49,23 +56,52 @@ router.post("/database/row/select", async (req, res) => {
   );
   console.log("projection:", projection);
 
-  let filteredProjection;
-  const columsToProject = getColumnsToProject(req.body);
-  if (columsToProject[0] !== "*") {
-    filteredProjection = projection.map((row) => {
-      const filteredRow = {};
-      for (const col of columsToProject) {
-        if (row.hasOwnProperty(col)) {
-          filteredRow[col] = row[col];
-        }
-      }
-      return filteredRow;
-    });
-  } else {
-    filteredProjection = projection;
-  }
+  console.log(query);
+  const lines = query.split("\n");
+  const line = lines.find((line) =>
+    line.trim().toLowerCase().startsWith("select")
+  );
+  const columnsPart = line
+    .trim()
+    .slice(6) // remove "select"
+    .replace(";", "")
+    .trim();
+  const select = columnsPart.split(",").map((s) => s.trim());
 
-  res.json(filteredProjection);
+  console.log("haaaaa: ", select);
+  if (selection.success && handledJoinInput.groupBy.length !== 0) {
+    const groupedData = handleGroupByWithoutJoin(
+      projection,
+      handledJoinInput.groupBy,
+      select
+    );
+    if (groupedData === -1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid GROUP BY clause",
+        errorAt: "groupBy",
+      });
+    }
+    res.json(groupedData);
+  } else {
+    let filteredProjection;
+    const columsToProject = getColumnsToProject(req.body);
+    if (columsToProject[0] !== "*") {
+      filteredProjection = projection.map((row) => {
+        const filteredRow = {};
+        for (const col of columsToProject) {
+          if (row.hasOwnProperty(col)) {
+            filteredRow[col] = row[col];
+          }
+        }
+        return filteredRow;
+      });
+    } else {
+      filteredProjection = projection;
+    }
+
+    res.json(filteredProjection);
+  }
 });
 
 export default router;

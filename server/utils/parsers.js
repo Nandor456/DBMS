@@ -40,7 +40,7 @@ export function parseRows(query) {
   return { elements: element, dbName };
 }
 
-export function parseInsert(query, dbName) {
+export function parseInsert(query, dbName, groupBy) {
   let select = query.split(" ")[0];
   let selectElements = query.split(" ")[1];
   let i = 2;
@@ -71,14 +71,16 @@ export function parseInsert(query, dbName) {
     console.log("Invalid table name");
     return { status: 0, message: messageTable };
   }
-  const { status, message } = checkSelect(
-    dbName,
-    fromTable,
-    selectElementsContainer
-  );
-  if (status === 0) {
-    console.log("Invalid column names");
-    return { status: 0, message };
+  if (!groupBy) {
+    const { status, message } = checkSelect(
+      dbName,
+      fromTable,
+      selectElementsContainer
+    );
+    if (status === 0) {
+      console.log("Invalid column names");
+      return { status: 0, message };
+    }
   }
   const where = query.split(";")[2].trimStart();
   console.log("where: ", where);
@@ -244,7 +246,7 @@ function validateConditionTypes(conditions, columnTypesMap) {
   return { status: 1, message: "All values are valid" };
 }
 
-export function parseWhere(whereStatement, dbName, tableName) {
+export function parseWhere(whereStatement, dbName, tableName, groupBy) {
   if (!whereStatement) {
     return { status: 0, message: "Invalid where statement" };
   }
@@ -269,14 +271,15 @@ export function parseWhere(whereStatement, dbName, tableName) {
   const parsed = parseTokens(tokens);
   const { conditions, logicalOperators } = parsed;
   console.log("conditions: ", conditions);
-
-  const { status, message } = checkSelect(
-    dbName,
-    tableName,
-    extractColumns(conditions)
-  );
-  if (status === 0) {
-    return { status: 0, message };
+  if (!groupBy) {
+    const { status, message } = checkSelect(
+      dbName,
+      tableName,
+      extractColumns(conditions)
+    );
+    if (status === 0) {
+      return { status: 0, message };
+    }
   }
 
   // Típusellenőrzés

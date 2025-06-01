@@ -23,7 +23,7 @@ export function getConditions(elem, groupBy) {
   try {
     const { query } = elem;
     let { elements, dbName } = parseRows(query);
-    console.log("elements: ", elements, dbName);
+    console.log("elements: ", elements);
     if (!elements) {
       return {
         success: false,
@@ -43,23 +43,42 @@ export function getConditions(elem, groupBy) {
         message: message,
       };
     }
-    let {
-      status: statusWhere,
-      message: messageWhere,
-      result,
-    } = parseWhere(whereStatemant, dbName, tableName, groupBy);
-    if (statusWhere === 0) {
-      return {
-        success: false,
+    let flatConditions = [];
+    let result = null;
+    if (whereStatemant?.trim()) {
+      let parseRes;
+      try {
+        parseRes = parseWhere(whereStatemant, dbName, tableName);
+      } catch (err) {
+        console.error("parseWhere threw error:", err);
+        return {
+          success: false,
+          message: "Syntax error in WHERE clause: " + err.message,
+        };
+      }
+
+      const {
+        status: statusWhere,
         message: messageWhere,
-      };
+        result: whereResult,
+      } = parseRes;
+      if (statusWhere === 0) {
+        return {
+          success: false,
+          message: messageWhere,
+        };
+      }
+
+      result = whereResult;
     }
-    const columns = extractColumns(result.conditions);
-    console.log("result: ", columns);
-    const conditions = extractConditions(result.conditions);
-    console.log("conditions: ", conditions);
-    const flatConditions = flattenConditions(result);
-    console.log("conditionsWithOperator: ", flatConditions);
+    if (result) {
+      const columns = extractColumns(result.conditions);
+      console.log("result: ", columns);
+      const conditions = extractConditions(result.conditions);
+      console.log("conditions: ", conditions);
+      flatConditions = flattenConditions(result);
+      console.log("conditionsWithOperator: ", flatConditions);
+    }
 
     const jsonPath = path.resolve(
       __dirname,
@@ -80,6 +99,8 @@ export function getConditions(elem, groupBy) {
     };
     //console.log("sadsa", result.logicalOperators)
   } catch (error) {
+    console.log(error);
+
     return {
       success: false,
       message: "Internal server error",

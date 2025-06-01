@@ -3,6 +3,6 @@ import { joinController } from "../controllers/join/joinController.js";
 
 const router = createRouter();
 
-router.post("/", joinController);
+router.post("/join", joinController);
 
 export default router;

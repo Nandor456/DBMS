@@ -194,8 +194,9 @@ async function handleindexes(pk, parts, dbName, tableName) {
 
   const db = client.db(dbName);
   const collections = await db.listCollections().toArray();
+  const regex = new RegExp(`ᛥ${tableName}ᛥindexes`);
   const filteredCollections = collections.filter(
-    (collection) => /ᛥindexes/.test(collection.name) // '$' jelzi, hogy csak a végén legyen
+    (collection) => regex.test(collection.name) // '$' jelzi, hogy csak a végén legyen
   );
 
   let jsonData = JSON.parse(
@@ -274,8 +275,14 @@ export async function insert(req, res) {
       elements.push(line);
     }
   }
-  const inserts = elements.pop();
-  const firstElement = elements.pop();
+  const firstElement = elements.shift();
+  console.log("firstElement: ", firstElement);
+  let inserts = elements.shift();
+  console.log("inserts: ", inserts);
+  const valuesLines = elements;
+  console.log("valuesLines: ", valuesLines);
+  inserts = inserts + " " + valuesLines;
+  console.log("inserts: ", inserts);
   let use = firstElement.split(" ")[0];
   //console.log("USe: ", use);
   const dbName = firstElement.split(" ")[1].replace(/;$/, "");
@@ -288,8 +295,20 @@ export async function insert(req, res) {
   const columns = inserts.split("(")[1].split(")")[0];
   //console.log("column", columns);
   let value = inserts.split(")")[1].split("(")[0];
-  const values = inserts.split("(")[2].split(")")[0];
-  //console.log("Values: ", values);
+
+  const valuesMatches = [...inserts.matchAll(/\(([^()]+)\)/g)];
+
+  if (valuesMatches.length === 0) {
+    return res.status(400).send("Nem található érték az INSERT-ben.");
+  }
+
+  const valuesList = valuesMatches
+    .slice(1)
+    .map((match) =>
+      match[1].split(",").map((v) => v.trim().replace(/^'|'$/g, ""))
+    );
+
+  console.log("Values: ", valuesList);
   //console.log("Csak columns-ek: ", columns);
   //console.log(insert);
   insert = insert.toUpperCase();
@@ -300,9 +319,6 @@ export async function insert(req, res) {
     .split(",")
     .map((v) => v.trim().replace(/^'|'$/g, "").replace(/;$/, ""));
 
-  const parts = values
-    .split(",")
-    .map((v) => v.trim().replace(/^'|'$/g, "").replace(/;$/, ""));
   //console.log("parts:", parts[0]);
   //console.log("parts:", partNames, parts);
 
@@ -327,67 +343,79 @@ export async function insert(req, res) {
     //console.log("Meg nem letezik a tabla");
     return res.status(400).send("Meg nem letezik a tabla");
   }
-  if (partNames.length !== parts.length) {
-    console.log("itt a baj: ", partNames.length, parts.length);
-    return res.status(400).send("Hibas column megadas");
-  }
-  const fkValid = await testFK(partNames, parts, tableName, dbName);
-  if (!fkValid) {
-    return res
-      .status(400)
-      .send("FK hibás: nem létező idegen kulcsra hivatkoztál");
-  }
+  let documents = [];
+  for (const values of valuesList) {
+    const parts = values;
+    //      .split(",")
+    //    .map((v) => v.trim().replace(/^'|'$/g, "").replace(/;$/, ""));
 
-  //console.log("dsadasdasdsadadasd:     ", tableName, dbName);
-  const { key, indexes } = keyF(partNames, parts, tableName, dbName);
-  //console.log("itt a pk: ", key);
-  //console.log(indexes);
-  //console.log("Kulcsok: ", key);
-  const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
-  if (finalValues === -1) {
-    console.log("itt a baj: ", partNames, parts, indexes, dbName, tableName);
-    return res.status(400).send("Hibas column megadas");
+    if (partNames.length !== parts.length) {
+      console.log("itt a baj: ", partNames.length, parts.length);
+      return res.status(400).send("Hibas column megadas");
+    }
+    const fkValid = await testFK(partNames, parts, tableName, dbName);
+    if (!fkValid) {
+      return res
+        .status(400)
+        .send("FK hibás: nem létező idegen kulcsra hivatkoztál");
+    }
+
+    //console.log("dsadasdasdsadadasd:     ", tableName, dbName);
+    const { key, indexes } = keyF(partNames, parts, tableName, dbName);
+    //console.log("itt a pk: ", key);
+    //console.log(indexes);
+    //console.log("Kulcsok: ", key);
+    const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
+    if (finalValues === -1) {
+      console.log("itt a baj: ", partNames, parts, indexes, dbName, tableName);
+      return res.status(400).send("Hibas column megadas");
+    }
+    if (typeTest(dbName, tableName, partNames, parts) === -1) {
+      return res.status(400).send("Hibas tipusu elem megadasa");
+    }
+    //console.log(insert)
+    const db = client.db(dbName);
+    const collection = db.collection(tableName);
+    //Ha meg nem letezett az adabazis - key - indexnek allitjuk
+    //await collection.createIndex({ key: 1 }, { unique: true });
+    try {
+      let jsonData = JSON.parse(
+        fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
+      );
+      // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
+      const existing = await collection.findOne({ _id: key });
+      if (existing) {
+        console.log("Ez a kulcs már létezik!");
+        return res.json({ error: "Ez a kulcs már létezik!" });
+      }
+      //console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
+      if (
+        !(await unique(
+          partNames,
+          finalValues,
+          tableName,
+          dbName,
+          collection,
+          key
+        ))
+      ) {
+        return res.status(400).send("Az egyik ertek unique, es mar letezik");
+      }
+      //Ha nem létezik, beszúrjuk
+      //console.log("index elott");
+      handleindexes(key, finalValues, dbName, tableName);
+      documents.push({ _id: key, value: finalValues });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Hiba történt az adatbázisban");
+    }
   }
-  if (typeTest(dbName, tableName, partNames, parts) === -1) {
-    return res.status(400).send("Hibas tipusu elem megadasa");
-  }
-  //console.log(insert)
-  const db = client.db(dbName);
-  const collection = db.collection(tableName);
-  //Ha meg nem letezett az adabazis - key - indexnek allitjuk
-  //await collection.createIndex({ key: 1 }, { unique: true });
+  //console.log("index megoldva");
   try {
-    let jsonData = JSON.parse(
-      fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
-    );
-    // 🔍 Ellenőrzés, hogy már van-e ilyen kulcs
-    const existing = await collection.findOne({ _id: key });
-    if (existing) {
-      console.log("Ez a kulcs már létezik!");
-      return res.json({ error: "Ez a kulcs már létezik!" });
-    }
-    //console.log("hiba2: ", partNames, finalValues, tableName, dbName, key);
-    if (
-      !(await unique(
-        partNames,
-        finalValues,
-        tableName,
-        dbName,
-        collection,
-        key
-      ))
-    ) {
-      return res.status(400).send("Az egyik ertek unique, es mar letezik");
-    }
-    //Ha nem létezik, beszúrjuk
-    //console.log("index elott");
-    handleindexes(key, finalValues, dbName, tableName);
-    //console.log("index megoldva");
-    await collection.insertOne({ _id: key, value: finalValues });
-    fs.writeFileSync(
-      `test/${dbName}/${tableName}/column.json`,
-      JSON.stringify(jsonData, null, 2)
-    );
+    console.log("insert many res: ", documents);
+    const db = client.db(dbName);
+    const collection = db.collection(tableName);
+    await collection.insertMany(documents);
     //console.log("beszurodott");
     res.json({ success: true });
   } catch (err) {

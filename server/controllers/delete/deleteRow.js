@@ -103,6 +103,62 @@ async function fkissue(pk, dbName, tableName) {
   return { blocked: false };
 }
 
+async function cleanupIndexesOnDelete(pk, dbName, tableName) {
+  const db = client.db(dbName);
+  const collections = await db.listCollections().toArray();
+  const regex = new RegExp(`ᛥ${tableName}ᛥindexes`);
+  const filteredCollections = collections.filter((collection) =>
+    regex.test(collection.name)
+  );
+  console.log("Filtered Collections:", filteredCollections);
+
+  for (const filter of filteredCollections) {
+    let index = 3;
+    let indexes = [];
+    let element = " ";
+    while (element !== undefined) {
+      element = filter.name.split("ᛥ")[index];
+      if (element !== undefined) {
+        indexes.push(element);
+      }
+      index += 1;
+    }
+    console.log("Indexes:", indexes);
+    const jsonData = JSON.parse(
+      fs.readFileSync(`test/${dbName}/${tableName}/column.json`)
+    );
+    const allColumns = jsonData.column.map((col) => col.name);
+    const valueIndexMap = [];
+    console.log("All Columns:", allColumns);
+    for (const colName of indexes) {
+      const idx = parseInt(colName); // colName az '0', '1' stb.
+      if (!isNaN(idx) && idx >= 0 && idx < allColumns.length) {
+        valueIndexMap.push(idx);
+      }
+    }
+    console.log("Value Index Map:", valueIndexMap);
+    const collection = db.collection(filter.name);
+    const cursor = await db.collection(tableName).findOne({ _id: pk });
+    if (!cursor) continue;
+
+    const parts = cursor.value.split("#");
+    let final = valueIndexMap.map((i) => parts[i]).join("#");
+
+    const indexDoc = await collection.findOne({ _id: final });
+    if (indexDoc) {
+      let values = indexDoc.value.split("#").filter((v) => v !== pk);
+      if (values.length > 0) {
+        await collection.updateOne(
+          { _id: final },
+          { $set: { value: values.join("#") } }
+        );
+      } else {
+        await collection.deleteOne({ _id: final });
+      }
+    }
+  }
+}
+
 //USE Namost;
 //Delete from Tablam where elso='2'
 export async function deleteRow(req, res) {
@@ -167,10 +223,12 @@ export async function deleteRow(req, res) {
 
   const db = client.db(dbName);
   const collection = db.collection(tableName);
-
+  // indexelt oszlopokbol torles
+  await cleanupIndexesOnDelete(value, dbName, tableName);
   const deleteResult = await collection.deleteOne({ _id: value });
   if (deleteResult.deletedCount === 0) {
     return res.status(404).send("A megadott id-hoz nem tartozik rekord");
   }
+
   res.status(200).send("Delete sikeres");
 }

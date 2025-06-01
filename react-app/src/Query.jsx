@@ -81,7 +81,16 @@ function Query() {
       method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase();
       if (!["insert", "create", "delete", "select"].includes(method))
         throw new Error("Invalid method");
+      // if (method === "select") {
+      //   const starts = code.split(";").map((s) => {
+      //     if (s.replace(/\n/g, "").trim().toLowerCase().startsWith("join")) {
+      //       method = "join";
+      //     }
+      //   });
+      //   console.log("Starts:", starts);
+      // }
       const method_type = method === "delete" ? "DELETE" : "POST";
+      console.log("Method:", method);
       const response = await fetch(
         `http://localhost:4000/database/row/${method}`,
         {
@@ -92,7 +101,7 @@ function Query() {
       );
       let text = "failed";
 
-      if (method === "select") {
+      if (method === "select" || method === "join") {
         const json = await response.json();
         if (Array.isArray(json)) {
           json.forEach((row) => {
@@ -100,10 +109,10 @@ function Query() {
           });
           console.log("SELECT result:", json);
           setQueryResult(json);
+          text = "SELECT executed successfully";
         } else {
-          alert("SELECT did not return a valid array.");
+          text = "SELECT did not return a valid array.";
         }
-        text = "SELECT executed successfully";
       } else {
         text = await response.text();
 

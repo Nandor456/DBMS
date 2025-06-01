@@ -7,15 +7,8 @@ import {
 import { simpleNestedLoopJoin } from "./indexedNestedLoop.js";
 import { handleGroupBy } from "../../utils/handleGroupBy.js";
 
-export async function joinController(req, res) {
-  const handledJoinInput = handleJoinInput(req.body);
-  if (!handledJoinInput.success) {
-    return res.status(400).json({
-      success: false,
-      message: handledJoinInput.message,
-      errorAt: handledJoinInput.errorAt,
-    });
-  }
+export async function joinController(handledJoinInput, req, res) {
+
 
   const splitTables = splitConditionsByTable(handledJoinInput.where);
   const splitGroupBy = splitGroupByTable(

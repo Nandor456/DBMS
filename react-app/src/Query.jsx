@@ -81,14 +81,14 @@ function Query() {
       method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase();
       if (!["insert", "create", "delete", "select"].includes(method))
         throw new Error("Invalid method");
-      if (method === "select") {
-        const starts = code.split(";").map((s) => {
-          if (s.replace(/\n/g, "").trim().toLowerCase().startsWith("join")) {
-            method = "join";
-          }
-        });
-        console.log("Starts:", starts);
-      }
+      // if (method === "select") {
+      //   const starts = code.split(";").map((s) => {
+      //     if (s.replace(/\n/g, "").trim().toLowerCase().startsWith("join")) {
+      //       method = "join";
+      //     }
+      //   });
+      //   console.log("Starts:", starts);
+      // }
       const method_type = method === "delete" ? "DELETE" : "POST";
       console.log("Method:", method);
       const response = await fetch(

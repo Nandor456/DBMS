@@ -6,7 +6,12 @@ import { getColumnsToProject } from "../select/getColumnsToProject.js";
 import { handleJoinInput } from "../utils/handleJoinInput.js";
 import { joinController } from "../controllers/join/joinController.js";
 import { handleGroupBy } from "../utils/handleGroupBy.js";
-import { handleGroupByWithoutJoin } from "../utils/handleGroupByWithoutJoin.js";
+import {
+  handleGroupByWithoutJoin,
+  handleGroupByWithIndexes,
+} from "../utils/handleGroupByWithoutJoin.js";
+import { getIndexedFileNameForCompositeIndex2 } from "../select/getIndexedFileNameForCompositeIndex.js";
+import { getJsonData } from "../utils/getJsonData.js";
 
 const router = express.Router();
 console.log("SelectRouter loaded");
@@ -39,6 +44,48 @@ router.post("/database/row/select", async (req, res) => {
   }
   const whereData = getConditions(req.body, groupBy);
   console.log("whereData:", whereData);
+  if (!whereData.where && handledJoinInput.groupBy.length !== 0) {
+    const jsonData = getJsonData(whereData.dbName, whereData.collName);
+    const lines = query.split("\n");
+    const line = lines.find((line) =>
+      line.trim().toLowerCase().startsWith("select")
+    );
+    const columnsPart = line
+      .trim()
+      .slice(6) // remove "select"
+      .replace(";", "")
+      .trim();
+    const select = columnsPart.split(",").map((s) => s.trim());
+
+    const indexName = getIndexedFileNameForCompositeIndex2(
+      whereData.collName,
+      jsonData,
+      handledJoinInput.groupBy
+    );
+    console.log("indexName:", indexName);
+    if (indexName !== null) {
+      console.log("halo------------", indexName);
+      const resp = await handleGroupByWithIndexes(
+        whereData.dbName,
+        whereData.collName,
+        indexName,
+        select,
+        jsonData,
+        handledJoinInput.groupBy
+      );
+      console.log("groupedData:", resp);
+      if (resp === -1) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid GROUP BY clause",
+          errorAt: "groupBy",
+        });
+      }
+      console.log("groupedData:", resp);
+      return res.json(resp);
+    }
+  }
+  console.log("whereData:", whereData);
   if (!whereData.success) {
     res.send(whereData.message);
   }
@@ -56,7 +103,7 @@ router.post("/database/row/select", async (req, res) => {
   console.log("projection:", projection);
 
   console.log(query);
-  const lines = query.split("\n");
+  const lines = query.split("\n"); // select kinyerese
   const line = lines.find((line) =>
     line.trim().toLowerCase().startsWith("select")
   );

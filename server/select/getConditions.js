@@ -45,7 +45,8 @@ export function getConditions(elem, groupBy) {
     }
     let flatConditions = [];
     let result = null;
-    if (whereStatemant?.trim()) {
+    console.log("it--------------", whereStatemant)
+    if (whereStatemant) {
       let parseRes;
       try {
         parseRes = parseWhere(whereStatemant, dbName, tableName);
@@ -93,6 +94,7 @@ export function getConditions(elem, groupBy) {
     //buildFilterFunction(flatConditions, schema);
     return {
       success: true,
+      where: whereStatemant? true : false,
       dbName: dbName,
       collName: tableName,
       conditions: flatConditions,

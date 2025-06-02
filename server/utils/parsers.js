@@ -83,7 +83,11 @@ export function parseInsert(query, dbName, groupBy) {
     }
   }
   const parts = query.split(";");
-  const where = parts.length > 2 ? parts[2].trimStart() : "";
+  let where = parts.length > 2 ? parts[2].trimStart() : "";
+  console.log("where: ", parts[2]);
+  if (!where || !parts[2].toUpperCase().trim().startsWith("WHERE")) {
+    where = false;
+  }
   console.log("where: ", where);
   console.log("itt");
   return {

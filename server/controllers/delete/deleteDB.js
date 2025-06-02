@@ -6,12 +6,13 @@ import {
   getTablePath,
   getFolderPath,
 } from "../../utils/paths.js";
+import { getDBClient } from "../../../server.js";
 
 const dbFile = getDatabasePath();
 const tableFile = getTablePath();
 const folder = getFolderPath();
 //database delete
-export function deleteDB(req, res) {
+export async function deleteDB(req, res) {
   const { name } = req.body;
   console.log(name);
   if (!name) return res.status(404).send("Not Found");
@@ -35,15 +36,23 @@ export function deleteDB(req, res) {
   const folderPath = path.join(folder, name);
   console.log(folderPath);
   try {
-    fs.rmSync(folderPath, { recursive: true, force: true }); // "force" ensures it doesn't fail if the folder is missing
+    fs.rmSync(folderPath, { recursive: true, force: true });
   } catch (error) {
     console.error("Error deleting folder:", error);
+  }
+  try {
+    const client = getDBClient();
+    await client.db(name).dropDatabase();
+    console.log(`MongoDB adatbázis '${name}' törölve.`);
+  } catch (error) {
+    console.error("Hiba a MongoDB adatbázis törlésénél:", error);
+    return res.status(500).send("Hiba a MongoDB adatbázis törlésekor");
   }
   res.json({ message: `Adatbazis '${name}'-torolve` });
 }
 
 //table delete
-export function deleteTable(req, res) {
+export async function deleteTable(req, res) {
   console.log("teroles");
 
   const { database, table } = req.body;
@@ -51,20 +60,53 @@ export function deleteTable(req, res) {
 
   let tableData = JSON.parse(fs.readFileSync(tableFile));
 
-  if (!tableData[database].some((value) => value === table)) {
-    // table meg nem letezik
+  if (!tableData[database]?.includes(table)) {
     console.log("Meg nem letezik a tabla");
     return res.status(400).send("Meg nem letezik a tabla");
   }
 
+  // 1. Tábla törlése JSON-ból
   tableData[database] = tableData[database].filter(
     (element) => element !== table
   );
-  console.log(tableData);
   fs.writeFileSync(tableFile, JSON.stringify(tableData, null, 2));
 
+  // 2. Fájlrendszer törlése
   const folderPath = path.join(folder, database, table);
   console.log("folderpath", folderPath);
-  fs.rmSync(folderPath, { recursive: true });
-  res.json({ message: `Adatbazis '${database}'-ban '${table}' torolve` });
+  try {
+    fs.rmSync(folderPath, { recursive: true, force: true });
+  } catch (err) {
+    console.error("Fájlrendszer törlés hiba:", err);
+  }
+
+  // 3. MongoDB collection törlése
+  try {
+    const client = getDBClient();
+    await client.db(database).collection(table).drop();
+    console.log(`Collection '${table}' törölve a MongoDB-ből (${database})`);
+
+    // 4. Index collectionök törlése
+    const collections = await client.db(database).listCollections().toArray();
+    const indexCollectionsToDrop = collections
+      .map((col) => col.name)
+      .filter((name) => {
+        const parts = name.split("ᛥ");
+        return parts.length >= 2 && parts[1] === table;
+      });
+
+    for (const indexName of indexCollectionsToDrop) {
+      await client.db(database).collection(indexName).drop();
+      console.log(`Index collection '${indexName}' törölve.`);
+    }
+  } catch (err) {
+    console.error("MongoDB törlés hiba:", err);
+    return res
+      .status(500)
+      .send("MongoDB törlés közben hiba történt (collection vagy index)");
+  }
+
+  return res.json({
+    message: `Adatbazis '${database}'-ban '${table}' torolve`,
+  });
 }

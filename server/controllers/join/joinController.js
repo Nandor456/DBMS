@@ -62,8 +62,6 @@ export async function joinController(handledJoinInput, req, res) {
   const indexedNestedLoop = await simpleNestedLoopJoin(joinRes, joinChain);
   console.log("nested:", indexedNestedLoop);
   console.log("splitGroupBy:", Object.keys(splitGroupBy).length);
-  const toProject = projectSelectedColumns(indexedNestedLoop, handledJoinInput);
-  console.log("toProject", toProject);
 
   if (Object.keys(splitGroupBy).length !== 0) {
     const groupedData = handleGroupBy(
@@ -82,6 +80,10 @@ export async function joinController(handledJoinInput, req, res) {
     }
     res.json(groupedData);
   } else {
+    const toProject = projectSelectedColumns(
+      indexedNestedLoop,
+      handledJoinInput
+    );
     res.json(toProject);
   }
 }

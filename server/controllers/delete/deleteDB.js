@@ -1,11 +1,15 @@
 import fs from "fs";
 import path from "path";
-import { getDatabasePath, getTablePath, getFolderPath } from "../../utils/paths.js";
+import { fileURLToPath } from "url";
+import {
+  getDatabasePath,
+  getTablePath,
+  getFolderPath,
+} from "../../utils/paths.js";
 
 const dbFile = getDatabasePath();
 const tableFile = getTablePath();
 const folder = getFolderPath();
-
 //database delete
 export function deleteDB(req, res) {
   const { name } = req.body;
@@ -40,6 +44,8 @@ export function deleteDB(req, res) {
 
 //table delete
 export function deleteTable(req, res) {
+  console.log("teroles");
+
   const { database, table } = req.body;
   if (!database || !table) return res.status(404).send("Not Found");
 
@@ -57,8 +63,8 @@ export function deleteTable(req, res) {
   console.log(tableData);
   fs.writeFileSync(tableFile, JSON.stringify(tableData, null, 2));
 
-  const folderPath = path.join(__dirname, folder, database, table);
-  console.log(folderPath);
+  const folderPath = path.join(folder, database, table);
+  console.log("folderpath", folderPath);
   fs.rmSync(folderPath, { recursive: true });
   res.json({ message: `Adatbazis '${database}'-ban '${table}' torolve` });
 }

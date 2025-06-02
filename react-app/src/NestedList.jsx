@@ -5,16 +5,19 @@ import {
   ListItemText,
   ListSubheader,
   Collapse,
+  IconButton,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
 import { fetchTables } from "./utils/OldTableFunction";
 import { fetchDatabases } from "./utils/OldDatabaseFunction";
 
-function NestedList({ updateTrigger, updateTriggerDB }) {
+function NestedList({ updateTriggerDB }) {
   const [dbNames, setDbNames] = useState([]);
   const [openStates, setOpenStates] = useState({});
   const [tables, setTables] = useState({}); // Store tables as an object
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   useEffect(() => {
     // fetch("http://localhost:4000/database/old")
@@ -71,6 +74,31 @@ function NestedList({ updateTrigger, updateTriggerDB }) {
     setOpenStates((prev) => ({ ...prev, [dbName]: !prev[dbName] }));
   };
 
+  const handleDeleteTable = async (dbName, tableName) => {
+    const jsonData = {
+      database: dbName,
+      table: tableName,
+    };
+    try {
+      const res = await fetch(
+        "http://localhost:4000/database/table/delete/table",
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(jsonData),
+        }
+      );
+
+      if (!res.ok) throw new Error("Delete failed");
+
+      const data = await res.json();
+      alert(data.message);
+      console.log("Delete success:", data);
+      setUpdateTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
+  };
   return (
     <List
       subheader={
@@ -101,6 +129,13 @@ function NestedList({ updateTrigger, updateTriggerDB }) {
               {tables[dbName]?.length > 0 ? (
                 tables[dbName].map((table, tIndex) => (
                   <ListItem key={tIndex} disablePadding>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => handleDeleteTable(dbName, table)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                     <ListItemButton>
                       <ListItemText primary={table} />
                     </ListItemButton>

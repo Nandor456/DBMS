@@ -65,13 +65,13 @@ export async function deleteTable(req, res) {
     return res.status(400).send("Meg nem letezik a tabla");
   }
 
-  // 1. Tábla törlése JSON-ból
+  // Tábla törlése JSON-ból
   tableData[database] = tableData[database].filter(
     (element) => element !== table
   );
   fs.writeFileSync(tableFile, JSON.stringify(tableData, null, 2));
 
-  // 2. Fájlrendszer törlése
+  // Fájlrendszer törlése
   const folderPath = path.join(folder, database, table);
   console.log("folderpath", folderPath);
   try {
@@ -80,13 +80,13 @@ export async function deleteTable(req, res) {
     console.error("Fájlrendszer törlés hiba:", err);
   }
 
-  // 3. MongoDB collection törlése
+  // MongoDB collection törlése
   try {
     const client = getDBClient();
     await client.db(database).collection(table).drop();
     console.log(`Collection '${table}' törölve a MongoDB-ből (${database})`);
 
-    // 4. Index collectionök törlése
+    // Index collectionök törlése
     const collections = await client.db(database).listCollections().toArray();
     const indexCollectionsToDrop = collections
       .map((col) => col.name)

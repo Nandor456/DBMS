@@ -54,7 +54,7 @@ function Query() {
           console.log("Columns data:", data);
 
           if (Array.isArray(data.columns)) {
-            setDynamicColumns(data.columns); // felülírjuk, nem bővítjük
+            setDynamicColumns(data.columns);
           } else {
             console.log("No columns found");
             setDynamicColumns([]);
@@ -81,14 +81,6 @@ function Query() {
       method = code.split(";")[1]?.trim().split(" ")[0].toLowerCase();
       if (!["insert", "create", "delete", "select"].includes(method))
         throw new Error("Invalid method");
-      // if (method === "select") {
-      //   const starts = code.split(";").map((s) => {
-      //     if (s.replace(/\n/g, "").trim().toLowerCase().startsWith("join")) {
-      //       method = "join";
-      //     }
-      //   });
-      //   console.log("Starts:", starts);
-      // }
       const method_type = method === "delete" ? "DELETE" : "POST";
       console.log("Method:", method);
       const response = await fetch(
@@ -150,7 +142,16 @@ function Query() {
         alignItems: "stretch",
       }}
     >
-      <Button onClick={handleClick} variant="contained">
+      <Button
+        onClick={handleClick}
+        variant="contained"
+        sx={{
+          width: "150px",
+          height: "50px",
+          fontSize: "16px",
+          mb: 2,
+        }}
+      >
         Run
       </Button>
       <div
@@ -163,8 +164,8 @@ function Query() {
       >
         <CodeMirror
           value={code}
+          height="700px"
           width="1000px"
-          height="500px"
           extensions={extensions}
           onChange={(val) => {
             setCode(val);
@@ -193,48 +194,3 @@ function Query() {
 }
 
 export default Query;
-
-// useEffect(() => {
-//     const load = async () => {
-//       try {
-//         const dbs = await fetchDatabases();
-//         const tablesByDb = await fetchTables();
-//         const keywords = [
-//           "SELECT",
-//           "FROM",
-//           "INSERT",
-//           "DELETE",
-//           "UPDATE",
-//           "TABLE",
-//         ];
-//         const dynamic = [...dbs];
-
-//         for (const [db, tables] of Object.entries(tablesByDb)) {
-//           for (const table of tables) {
-//             dynamic.push(table);
-//             if (databases && tableName) {
-//               const res = await fetch(
-//                 "http://localhost:4000/database/columns",
-//                 {
-//                   method: "POST",
-//                   headers: { "Content-Type": "application/json" },
-//                   body: JSON.stringify({ database: db, table }),
-//                 }
-//               );
-//               if (res.ok) {
-//                 const data = await res.json();
-//                 if (Array.isArray(data.columns)) {
-//                   dynamic.push(...data.columns);
-//                 }
-//               }
-//             }
-//           }
-//         }
-
-//         setSuggestions([...keywords, ...dynamic]);
-//       } catch (e) {
-//         console.error("Failed to load autocomplete items", e);
-//       }
-//     };
-//     load();
-//   }, []);

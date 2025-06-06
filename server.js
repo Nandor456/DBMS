@@ -1,8 +1,3 @@
-//JAvitani:   - touppercase az insertnel kivenni a partnamenel
-//            - az insertnel a partname-ek beolvasnanl ossze vissza irodhatnak es nem veszi eszre (tehat ha egy oszlop nev asd akkor mas oszlopnak is azt adjuk meg hogy asd, akkor azt fogja hinni a kod hogy jo es hibak lesznek ott, ezt meg atnezni)
-//           - delete - nem torli a mongobol a sorokat, ha a db-t torlom
-//           - fronton mindenre succes valaszt ir ki az alert ha nem jo is
-
 import express from "express";
 import cors from "cors";
 import fs from "fs";
@@ -81,5 +76,4 @@ app.post("/database/columns", (req, res) => {
   res.json({ columns });
 });
 
-//createIndex("azigaziindex", ['ez', 'az'], "hes", "aaa")
 app.use(SelectRouter);

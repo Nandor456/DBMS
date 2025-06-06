@@ -19,9 +19,7 @@ console.log("SelectRouter loaded");
 router.post("/database/row/select", async (req, res) => {
   const { query } = req.body;
   const handledJoinInput = handleJoinInput(req.body);
-  //console.log("handledJoinInput:", handledJoinInput);
   if (handledJoinInput?.groupBy === false) {
-    //console.log("handledJoinInput.groupBy:", handledJoinInput.groupBy);
     return res.status(400).json({
       success: false,
       message: "Invalid GROUP BY clause",

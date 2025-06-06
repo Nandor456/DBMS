@@ -87,11 +87,9 @@ export function getConditions(elem, groupBy) {
     );
     const jsonData = fs.readFileSync(jsonPath, "utf-8");
     const data = JSON.parse(jsonData);
-    //console.log("data: ", data);
 
     const existingColumns = data.column.map((col) => col.name);
 
-    //buildFilterFunction(flatConditions, schema);
     return {
       success: true,
       where: whereStatemant? true : false,
@@ -99,7 +97,6 @@ export function getConditions(elem, groupBy) {
       collName: tableName,
       conditions: flatConditions,
     };
-    //console.log("sadsa", result.logicalOperators)
   } catch (error) {
     console.log(error);
 

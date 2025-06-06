@@ -116,7 +116,7 @@ export function createTable(req, res) {
         );
     }
     for (const fkName of fkFields) {
-      // 1. Megnézzük, hogy az FK mező létezik-e a másik táblában
+      // Megnézzük, hogy az FK mező létezik-e a másik táblában
       const referencedColumn = fkData.column.find(
         (col) => col.name === fkName.FKColumnName
       );
@@ -131,7 +131,7 @@ export function createTable(req, res) {
           );
       }
 
-      // 2. Megnézzük, hogy a helyi oszlop létezik-e
+      // Megnézzük, hogy a helyi oszlop létezik-e
       const localColumn = columns.column.find(
         (col) => col.name === fkName.value
       );
@@ -146,7 +146,7 @@ export function createTable(req, res) {
           );
       }
 
-      // 3. Típus egyezés ellenőrzése
+      // Típus egyezés ellenőrzése
       if (localColumn.type !== referencedColumn.type) {
         console.log(
           `A '${fkName.value}' mező típusa nem egyezik: (${localColumn.type} vs ${referencedColumn.type})`

@@ -199,11 +199,15 @@ function CollectionName({ onTableCreated }) {
     };
 
     try {
-      await fetch("http://localhost:4000/database/table", {
+      const response = await fetch("http://localhost:4000/database/table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(jsonData),
       });
+      if (!response.ok) {
+        const errorData = await response.text();
+        throw new Error(errorData);
+      }
 
       alert("Table added successfully!");
       console.log(tableName);
@@ -239,7 +243,7 @@ function CollectionName({ onTableCreated }) {
       });
     } catch (error) {
       console.error("Error sending data:", error);
-      alert("Failed to send JSON data.");
+      alert(`Failed to send JSON data: ${error.message}`);
     }
   };
 

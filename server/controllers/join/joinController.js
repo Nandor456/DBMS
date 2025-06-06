@@ -78,12 +78,47 @@ export async function joinController(handledJoinInput, req, res) {
         errorAt: "groupBy",
       });
     }
+    if (handledJoinInput.orderBy && handledJoinInput.orderBy.length !== 0) {
+      const orderKeys = handledJoinInput.orderBy;
+      console.log("orderKeys:", orderKeys);
+      groupedData.sort((a, b) => {
+        for (const { column, direction } of orderKeys) {
+          const aValue = column.split(".");
+          const valA = a[aValue[0] + "." + aValue[1]];
+          const valB = b[aValue[0] + "." + aValue[1]];
+          const valANum = isNaN(valA) ? valA : Number(valA);
+          const valBNum = isNaN(valB) ? valB : Number(valB);
+
+          if (valANum < valBNum) return direction === "ASC" ? -1 : 1;
+          if (valANum > valBNum) return direction === "ASC" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
     res.json(groupedData);
   } else {
     const toProject = projectSelectedColumns(
       indexedNestedLoop,
       handledJoinInput
     );
+    console.log("handledJoinInput:", handledJoinInput);
+    if (handledJoinInput.orderBy && handledJoinInput.orderBy.length !== 0) {
+      const orderKeys = handledJoinInput.orderBy;
+
+      toProject.sort((a, b) => {
+        for (const { column, direction } of orderKeys) {
+          const aValue = column.split(".");
+          const valA = a[aliasToTable[aValue[0]] + "." + aValue[1]];
+          const valB = b[aliasToTable[aValue[0]] + "." + aValue[1]];
+          const valANum = isNaN(valA) ? valA : Number(valA);
+          const valBNum = isNaN(valB) ? valB : Number(valB);
+
+          if (valANum < valBNum) return direction === "ASC" ? -1 : 1;
+          if (valANum > valBNum) return direction === "ASC" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
     res.json(toProject);
   }
 }

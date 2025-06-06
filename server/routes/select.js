@@ -40,6 +40,10 @@ router.post("/database/row/select", async (req, res) => {
   if (handledJoinInput.groupBy.length === 0) {
     groupBy = false;
   }
+  let orderBy = true;
+  if (handledJoinInput.orderBy.length === 0) {
+    orderBy = false;
+  }
   const whereData = getConditions(req.body, groupBy);
   console.log("whereData:", whereData);
   if (!whereData.where && handledJoinInput.groupBy.length !== 0) {
@@ -143,8 +147,34 @@ router.post("/database/row/select", async (req, res) => {
     } else {
       filteredProjection = projection;
     }
+    console.log("filteredProjection:", filteredProjection);
+    if (!orderBy || orderBy.length === 0) {
+      return res.json(filteredProjection);
+    } else {
+      const orderKeys = handledJoinInput.orderBy;
 
-    res.json(filteredProjection);
+      filteredProjection.sort((a, b) => {
+        for (const { column, direction } of orderKeys) {
+          let valA = a[column];
+          let valB = b[column];
+
+          const numA = Number(valA);
+          const numB = Number(valB);
+          const isNumeric = !isNaN(numA) && !isNaN(numB);
+
+          if (isNumeric) {
+            valA = numA;
+            valB = numB;
+          }
+
+          if (valA < valB) return direction === "ASC" ? -1 : 1;
+          if (valA > valB) return direction === "ASC" ? 1 : -1;
+        }
+        return 0;
+      });
+
+      return res.json(filteredProjection);
+    }
   }
 });
 

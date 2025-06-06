@@ -11,6 +11,22 @@ export function handleJoinInput(elem) {
     cleaned
   );
 
+  const orderByMatch = /order\s+by\s+(.+?)(?:\s+limit|;|$)/i.exec(cleaned);
+  let orderBy = [];
+  if (orderByMatch) {
+    orderBy = orderByMatch[1].split(",").map((s) => {
+      const trimmed = s.trim();
+      const descMatch = /desc$/i.test(trimmed);
+      const ascMatch = /asc$/i.test(trimmed);
+
+      const column = trimmed.replace(/\s+(asc|desc)$/i, "").trim();
+
+      return {
+        column,
+        direction: descMatch ? "DESC" : "ASC",
+      };
+    });
+  }
   const groupByIndex = cleaned.toLowerCase().indexOf("group by");
   const whereIndex = cleaned.toLowerCase().indexOf("where");
 
@@ -19,6 +35,7 @@ export function handleJoinInput(elem) {
       isJoin: false,
       success: false,
       groupBy: false,
+      orderBy: false,
       message: "GROUP BY must appear after WHERE clause",
       errorAt: "group by",
     };
@@ -36,6 +53,7 @@ export function handleJoinInput(elem) {
       groupBy: groupByMatch
         ? groupByMatch[1].split(",").map((s) => s.trim())
         : [],
+      orderBy,
       success: false,
       message: "Missing or invalid JOIN clause",
       errorAt: "join",
@@ -130,6 +148,7 @@ export function handleJoinInput(elem) {
     groupBy: groupByMatch
       ? groupByMatch[1].split(",").map((s) => s.trim())
       : [],
+    orderBy,
   };
 
   return parts;

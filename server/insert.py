@@ -32,11 +32,3 @@ if response.ok:
         print("Sikeres válasz, de nem JSON:", response.text)
 else:
     print(f"Hiba: {response.status_code} - {response.text}")
-
-
-# use Bemutato1;
-# select *;
-# FROM student s;
-# join book b on s.id = b.studentFk;
-# join teacher t on s.id = t.id;
-# where s.age < 20 AND t.age > 63622;

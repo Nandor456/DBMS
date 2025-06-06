@@ -220,8 +220,6 @@ async function handleindexes(pk, parts, dbName, tableName) {
         //indexes.push(element);
       }
       index = index + 1;
-      console.log(element);
-      console.log(element);
     }
     if (indexes.length > 0) {
       //cols.push(indexes)
@@ -250,7 +248,6 @@ async function handleindexes(pk, parts, dbName, tableName) {
           value: pk,
         });
       }
-      console.log(final, filter.name);
     }
   }
 }
@@ -276,13 +273,9 @@ export async function insert(req, res) {
     }
   }
   const firstElement = elements.shift();
-  console.log("firstElement: ", firstElement);
   let inserts = elements.shift();
-  console.log("inserts: ", inserts);
   const valuesLines = elements;
-  console.log("valuesLines: ", valuesLines);
   inserts = inserts + " " + valuesLines;
-  console.log("inserts: ", inserts);
   let use = firstElement.split(" ")[0];
   //console.log("USe: ", use);
   const dbName = firstElement.split(" ")[1].replace(/;$/, "");
@@ -308,7 +301,6 @@ export async function insert(req, res) {
       match[1].split(",").map((v) => v.trim().replace(/^'|'$/g, ""))
     );
 
-  console.log("Values: ", valuesList);
   //console.log("Csak columns-ek: ", columns);
   //console.log(insert);
   insert = insert.toUpperCase();
@@ -350,7 +342,7 @@ export async function insert(req, res) {
     //    .map((v) => v.trim().replace(/^'|'$/g, "").replace(/;$/, ""));
 
     if (partNames.length !== parts.length) {
-      console.log("itt a baj: ", partNames.length, parts.length);
+      //console.log("itt a baj: ", partNames.length, parts.length);
       return res.status(400).send("Hibas column megadas");
     }
     const fkValid = await testFK(partNames, parts, tableName, dbName);
@@ -367,7 +359,7 @@ export async function insert(req, res) {
     //console.log("Kulcsok: ", key);
     const finalValues = valueF(partNames, parts, indexes, dbName, tableName);
     if (finalValues === -1) {
-      console.log("itt a baj: ", partNames, parts, indexes, dbName, tableName);
+      //console.log("itt a baj: ", partNames, parts, indexes, dbName, tableName);
       return res.status(400).send("Hibas column megadas");
     }
     if (typeTest(dbName, tableName, partNames, parts) === -1) {

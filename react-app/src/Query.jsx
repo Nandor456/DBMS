@@ -163,8 +163,8 @@ function Query() {
       >
         <CodeMirror
           value={code}
-          width="1000%"
-          height="1000%"
+          width="1000px"
+          height="500px"
           extensions={extensions}
           onChange={(val) => {
             setCode(val);

@@ -1,7 +1,12 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Config/Database Files
 table.json
 databases.json
-/test
-/test/*
-**/.DS_Store
+
+# Test folder
+/test/
+
+# macOS system files
 .DS_Store
